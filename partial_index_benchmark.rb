@@ -11,7 +11,7 @@ DB_NAME = ENV['DB_NAME'] || 'flexile_test'
 DB_USER = ENV['DB_USER'] || ENV['USER']
 DB_PASS = ENV['DB_PASSWORD']
 
-DATA_SIZE = ENV['DATA_SIZE']&.to_i || 500  # Default 100k for meaningful results
+DATA_SIZE = ENV['DATA_SIZE']&.to_i || 100_000  # Default 100k for meaningful results
 
 puts "\n🚀 Accurate Invoice Query Performance Benchmark"
 puts "=" * 60
