@@ -107,7 +107,7 @@ RSpec.describe LiquidationScenarioCalculation do
       end
     end
 
-    context 'with convertible securities' do
+  context 'with convertible securities' do
       let(:company) { create(:company) }
       let(:common_class) { create(:share_class, company:) }
       let(:investor) { create(:company_investor, company:) }
@@ -141,4 +141,111 @@ RSpec.describe LiquidationScenarioCalculation do
       end
     end
   end
+
+    context 'with valuation cap' do
+      let(:company) { create(:company) }
+      let(:common_class) { create(:share_class, company:) }
+      let(:investor) { create(:company_investor, company:) }
+      let(:convertible_investor) { create(:company_investor, company:) }
+      let(:scenario) { create(:liquidation_scenario, company:, exit_amount_cents: 50_000) }
+
+      before do
+        create(:share_holding, company_investor: investor, share_class: common_class, number_of_shares: 100)
+        investment = create(:convertible_investment, company:)
+        create(:convertible_security, company_investor: convertible_investor, convertible_investment: investment,
+                                       principal_value_in_cents: 10_000, implied_shares: 100,
+                                       valuation_cap_cents: 2_000)
+        described_class.new(scenario).process
+      end
+
+      it 'uses cap price for conversion' do
+        payout = scenario.liquidation_payouts.find_by(company_investor: convertible_investor)
+        expect(payout.payout_amount_cents).to be > 10_000
+      end
+    end
+
+    context 'with discount rate' do
+      let(:company) { create(:company) }
+      let(:common_class) { create(:share_class, company:) }
+      let(:investor) { create(:company_investor, company:) }
+      let(:convertible_investor) { create(:company_investor, company:) }
+      let(:scenario) { create(:liquidation_scenario, company:, exit_amount_cents: 50_000) }
+
+      before do
+        create(:share_holding, company_investor: investor, share_class: common_class, number_of_shares: 100)
+        investment = create(:convertible_investment, company:)
+        create(:convertible_security, company_investor: convertible_investor, convertible_investment: investment,
+                                       principal_value_in_cents: 10_000, implied_shares: 100,
+                                       discount_rate_percent: 20)
+        described_class.new(scenario).process
+      end
+
+      it 'applies discount to conversion price' do
+        payout = scenario.liquidation_payouts.find_by(company_investor: convertible_investor)
+        expect(payout.payout_amount_cents).to be > 10_000
+      end
+    end
+
+    context 'with interest accrual' do
+      let(:company) { create(:company) }
+      let(:common_class) { create(:share_class, company:) }
+      let(:investor) { create(:company_investor, company:) }
+      let(:convertible_investor) { create(:company_investor, company:) }
+      let(:scenario) { create(:liquidation_scenario, company:, exit_amount_cents: 20_000) }
+
+      before do
+        create(:share_holding, company_investor: investor, share_class: common_class, number_of_shares: 100)
+        investment = create(:convertible_investment, company:)
+        create(:convertible_security, company_investor: convertible_investor, convertible_investment: investment,
+                                       principal_value_in_cents: 10_000, implied_shares: 50,
+                                       interest_rate_percent: 10, issued_at: 1.year.ago, maturity_date: 1.day.ago)
+        described_class.new(scenario).process
+      end
+
+      it 'includes accrued interest in payout' do
+        payout = scenario.liquidation_payouts.find_by(company_investor: convertible_investor)
+        expect(payout.payout_amount_cents).to be > 10_000
+      end
+    end
+
+    context 'with multiple convertibles' do
+      let(:company) { create(:company) }
+      let(:common_class) { create(:share_class, company:) }
+      let(:investor) { create(:company_investor, company:) }
+      let(:convertible_1) { create(:company_investor, company:) }
+      let(:convertible_2) { create(:company_investor, company:) }
+      let(:scenario) { create(:liquidation_scenario, company:, exit_amount_cents: 100_000) }
+
+      before do
+        create(:share_holding, company_investor: investor, share_class: common_class, number_of_shares: 100)
+        investment = create(:convertible_investment, company:)
+        create(:convertible_security, company_investor: convertible_1, convertible_investment: investment,
+                                       principal_value_in_cents: 10_000, implied_shares: 100)
+        create(:convertible_security, company_investor: convertible_2, convertible_investment: investment,
+                                       principal_value_in_cents: 20_000, implied_shares: 100)
+        described_class.new(scenario).process
+      end
+
+      it 'creates payouts for all convertibles' do
+        expect(scenario.liquidation_payouts.where(security_type: 'convertible').count).to eq(2)
+      end
+    end
+
+    context 'with insufficient exit amount' do
+      let(:company) { create(:company) }
+      let(:preferred_class) { create(:share_class, :preferred, company:, original_issue_price_in_dollars: 1.0) }
+      let(:investor) { create(:company_investor, company:) }
+      let(:scenario) { create(:liquidation_scenario, company:, exit_amount_cents: 50_00) }
+
+      before do
+        create(:share_holding, company_investor: investor, share_class: preferred_class, number_of_shares: 100)
+        described_class.new(scenario).process
+      end
+
+      it 'pays out only available amount' do
+        payout = scenario.liquidation_payouts.first
+        expect(payout.payout_amount_cents).to eq(50_00)
+      end
+    end
+end
 end
