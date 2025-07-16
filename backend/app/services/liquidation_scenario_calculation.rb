@@ -173,7 +173,6 @@ class LiquidationScenarioCalculation
         company
           .share_holdings
           .joins(:share_class, :company_investor)
-          .includes(:share_class, :company_investor)
           .group(:company_investor_id, :share_class_id)
           .select('company_investor_id, share_class_id, SUM(number_of_shares) AS total_shares')
     end

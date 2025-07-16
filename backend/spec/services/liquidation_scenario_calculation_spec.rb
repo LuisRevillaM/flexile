@@ -140,7 +140,6 @@ RSpec.describe LiquidationScenarioCalculation do
         expect(payout.security_type).to eq('convertible')
       end
     end
-  end
 
     context 'with valuation cap' do
       let(:company) { create(:company) }
@@ -247,5 +246,5 @@ RSpec.describe LiquidationScenarioCalculation do
         expect(payout.payout_amount_cents).to eq(50_00)
       end
     end
-end
+  end
 end
