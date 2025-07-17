@@ -5,6 +5,7 @@ import { companiesRouter } from "@/trpc/routes/companies";
 import { equityCalculationsRouter } from "@/trpc/routes/equityCalculations";
 import { filesRouter } from "@/trpc/routes/files";
 import { investorEntitiesRouter } from "@/trpc/routes/investorEntities";
+import { companyInviteLinksRouter } from "./routes/companyInviteLinks";
 import { companyUpdatesRouter } from "./routes/companyUpdates";
 import { consolidatedInvoicesRouter } from "./routes/consolidatedInvoices";
 import { contractorsRouter } from "./routes/contractors";
@@ -56,6 +57,7 @@ export const appRouter = createRouter({
   equityCalculations: equityCalculationsRouter,
   lawyers: lawyersRouter,
   waterfallPlayground: waterfallPlaygroundRouter,
+  companyInviteLinks: companyInviteLinksRouter,
 });
 export type AppRouter = typeof appRouter;
 
