@@ -13,6 +13,7 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  smallint,
   text,
   timestamp,
   uniqueIndex,
@@ -951,6 +952,10 @@ export const shareClasses = pgTable(
       .$onUpdate(() => new Date()),
 
     preferred: boolean().notNull().default(false),
+    liquidationPreferenceMultiple: numeric("liquidation_preference_multiple").default("1.0").notNull(),
+    participating: boolean("participating").default(false).notNull(),
+    participationCapMultiple: numeric("participation_cap_multiple"),
+    seniorityRank: smallint("seniority_rank"),
   },
   (table) => [
     index("index_share_classes_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
@@ -2566,5 +2571,66 @@ export const companyUpdatesRelations = relations(companyUpdates, ({ one }) => ({
   company: one(companies, {
     fields: [companyUpdates.companyId],
     references: [companies.id],
+  }),
+}));
+
+export const liquidationScenarios = pgTable("liquidation_scenarios", {
+  id: bigserial("id", { mode: "bigint" }).primaryKey(),
+  companyId: bigint("company_id", { mode: "bigint" })
+    .notNull()
+    .references(() => companies.id),
+  externalId: varchar("external_id", { length: 255 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  exitAmountCents: bigint("exit_amount_cents", { mode: "bigint" }).notNull(),
+  exitDate: date("exit_date", { mode: "date" }).notNull(),
+  status: varchar("status", { length: 50 }).notNull().default("draft"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const liquidationPayouts = pgTable("liquidation_payouts", {
+  id: bigserial("id", { mode: "bigint" }).primaryKey(),
+  liquidationScenarioId: bigint("liquidation_scenario_id", { mode: "bigint" })
+    .notNull()
+    .references(() => liquidationScenarios.id),
+  companyInvestorId: bigint("company_investor_id", { mode: "bigint" })
+    .notNull()
+    .references(() => companyInvestors.id),
+  shareClass: varchar("share_class", { length: 255 }),
+  securityType: varchar("security_type", { length: 50 }).notNull(),
+  numberOfShares: bigint("number_of_shares", { mode: "bigint" }),
+  payoutAmountCents: bigint("payout_amount_cents", { mode: "bigint" }).notNull(),
+  liquidationPreferenceAmount: numeric("liquidation_preference_amount", { precision: 20, scale: 2 }),
+  participationAmount: numeric("participation_amount", { precision: 20, scale: 2 }),
+  commonProceedsAmount: numeric("common_proceeds_amount", { precision: 20, scale: 2 }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const liquidationScenariosRelations = relations(liquidationScenarios, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [liquidationScenarios.companyId],
+    references: [companies.id],
+  }),
+  liquidationPayouts: many(liquidationPayouts),
+}));
+
+export const liquidationPayoutsRelations = relations(liquidationPayouts, ({ one }) => ({
+  liquidationScenario: one(liquidationScenarios, {
+    fields: [liquidationPayouts.liquidationScenarioId],
+    references: [liquidationScenarios.id],
+  }),
+  companyInvestor: one(companyInvestors, {
+    fields: [liquidationPayouts.companyInvestorId],
+    references: [companyInvestors.id],
   }),
 }));
