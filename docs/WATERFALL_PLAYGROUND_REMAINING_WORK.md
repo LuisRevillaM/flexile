@@ -5,26 +5,36 @@ The waterfall playground is a fully client-side tool for modeling liquidation sc
 
 ## ✅ Completed Features
 1. **Core Infrastructure**
-   - Zustand store for client-side state management
-   - tRPC endpoint to fetch existing cap table data
-   - Data loading hook with proper error handling
-   - Basic playground page with authorization
+   - Zustand store for client-side state management (`lib/equity-modeling/store.ts`)
+   - tRPC endpoint to fetch existing cap table data (`trpc/routes/waterfallPlayground.ts`)
+   - Data loading hook with proper error handling (`lib/equity-modeling/useLoadCapTable.ts`)
+   - Basic playground page with authorization (`app/equity/waterfall/playground/page.tsx`)
+   - Comprehensive TypeScript types (`lib/equity-modeling/types.ts`)
 
 2. **Calculation Engine**
-   - Full waterfall calculation logic
+   - Full waterfall calculation logic (`lib/equity-modeling/calculator.ts`)
    - Liquidation preference handling
    - Participation rights
    - Convertible securities conversion
    - Seniority ranking
+   - BigInt financial precision
 
 3. **Visualization**
    - WaterfallChartPro component (fixed phantom undistributed bar)
    - ExitAmountControl with slider and input
    - Real-time calculation updates
+   - Loading and error states
 
 4. **Navigation**
-   - Added to equity sidebar menu
+   - Added to equity sidebar menu (`app/equity/index.ts`)
    - Proper routing setup
+   - Admin/lawyer access control
+
+5. **Database Integration** ✨ NEW
+   - Model validations reverted to work without waterfall columns
+   - `seeds_minimal_equity.rb` script for creating test data
+   - Validated client-side approach works with clean database
+   - 4 test investors with 18M total shares across Common and Preferred Series A
 
 ## 🚧 Remaining Features
 
@@ -147,12 +157,34 @@ const newShareClass = {
 - Virtual scrolling for large investor lists
 - Web Workers for complex scenarios (if needed)
 
-## Next Steps
+## Current Status & Next Steps
 
-1. **Build ShareClassConfiguration** - This unlocks the core value prop
-2. **Build ConvertibleSecuritiesBuilder** - Completes the term configuration
-3. **Add scenario saving/comparison** - Enables "what-if" analysis
-4. **Polish and optimize** - Make it production-ready
+### 🎉 Recent Progress
+- ✅ **Database validation completed** - Playground works without waterfall database columns
+- ✅ **Model validations fixed** - Removed dependencies on non-existent fields
+- ✅ **Test data created** - 4 realistic investors with proper cap table structure
+- ✅ **Foundation validated** - Client-side approach proven to work
+
+### 🚀 Immediate Next Steps
+
+1. **Build ShareClassConfiguration** (Priority: HIGH)
+   - This unlocks the core value proposition
+   - Users can finally configure liquidation preferences, participation, etc.
+   - Component structure already planned (see section above)
+
+2. **Build ConvertibleSecuritiesBuilder** (Priority: HIGH)
+   - Completes the term configuration capability
+   - Enables SAFE and convertible note modeling
+   - Critical for complete waterfall scenarios
+
+3. **Add scenario saving/comparison** (Priority: MEDIUM)
+   - Enables "what-if" analysis workflows
+   - Local storage for client-side persistence
+
+4. **Polish and optimize** (Priority: LOW)
+   - Make it production-ready
+   - Performance optimizations
+   - UI/UX improvements
 
 ## User Journey
 1. User navigates to Waterfall Playground
@@ -168,5 +200,23 @@ const newShareClass = {
 - ✅ All terms are configurable in the UI
 - ✅ No database writes (client-side only)
 - ✅ Real-time visualization
+- ✅ Works with clean database (no waterfall columns required)
+- ✅ Loads existing cap table data properly
 - ⬜ Easy to understand and use
 - ⬜ Handles complex cap tables efficiently
+- ⬜ ShareClass configuration UI complete
+- ⬜ Convertible securities configuration UI complete
+
+## File References
+### Frontend Components
+- `frontend/app/equity/waterfall/playground/page.tsx` - Main playground page
+- `frontend/lib/equity-modeling/store.ts` - Zustand state management
+- `frontend/lib/equity-modeling/calculator.ts` - Waterfall calculation engine
+- `frontend/lib/equity-modeling/types.ts` - TypeScript definitions
+- `frontend/lib/equity-modeling/useLoadCapTable.ts` - Data loading hook
+- `frontend/trpc/routes/waterfallPlayground.ts` - API endpoint
+
+### Backend Models & Seeds
+- `backend/app/models/share_class.rb` - ShareClass model (validations reverted)
+- `backend/app/models/convertible_security.rb` - ConvertibleSecurity model (validations reverted)
+- `backend/db/seeds_minimal_equity.rb` - Test data creation script
