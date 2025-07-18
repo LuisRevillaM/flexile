@@ -14,6 +14,7 @@ import { useLoadCapTable } from "@/lib/equity-modeling/useLoadCapTable";
 import { formatMoneyFromCents, formatCompactMoney } from "@/utils/formatMoney";
 import ShareClassTermsPanel from "@/components/equity-modeling/ShareClassTermsPanel";
 import ConvertibleTermsPanel from "@/components/equity-modeling/ConvertibleTermsPanel";
+import MinimalExitSlider from "@/components/equity-modeling/MinimalExitSlider";
 
 type SidebarTab = 'exit' | 'terms';
 
@@ -163,6 +164,11 @@ export default function WaterfallPlaygroundPage() {
                 </div>
               ) : (
                 <div className="space-y-6">
+                  <MinimalExitSlider 
+                    exitAmountCents={scenario.exitAmountCents}
+                    onExitAmountChange={updateExitAmount}
+                  />
+                  <hr className="border-gray-200" />
                   <ShareClassTermsPanel className="shadow-none border-0 p-0" />
                   <hr className="border-gray-200" />
                   <ConvertibleTermsPanel className="shadow-none border-0 p-0" />
