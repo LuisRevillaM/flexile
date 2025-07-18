@@ -291,10 +291,10 @@ export default function WaterfallChartPro({
               {/* Show calculating indicator when payouts are being recalculated */}
               {isCalculating && (
                 <div className="mt-2">
-                  <div className="rounded border-2 border-dashed border-blue-300 bg-blue-50 p-3 text-center">
+                  <div className="rounded border-2 border-dashed border-gray-300 bg-gray-50 p-3 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600" />
-                      <div className="text-sm font-medium text-blue-600">Calculating...</div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400" />
+                      <div className="text-sm font-medium text-gray-600">Calculating...</div>
                     </div>
                   </div>
                 </div>

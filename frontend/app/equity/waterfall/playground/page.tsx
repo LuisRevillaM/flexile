@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Download, RotateCcw, ChevronDown, ChevronUp, DollarSign, Settings } from "lucide-react";
+import { Download, RotateCcw, ChevronDown, ChevronUp, ChevronRight, DollarSign, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useCurrentUser } from "@/global";
@@ -11,7 +11,7 @@ import WaterfallChartPro from "@/components/WaterfallChartPro";
 import ExitAmountControl from "@/components/ExitAmountControl";
 import { usePlayground } from "@/lib/equity-modeling/store";
 import { useLoadCapTable } from "@/lib/equity-modeling/useLoadCapTable";
-import { formatMoneyFromCents } from "@/utils/formatMoney";
+import { formatMoneyFromCents, formatCompactMoney } from "@/utils/formatMoney";
 import ShareClassTermsPanel from "@/components/equity-modeling/ShareClassTermsPanel";
 import ConvertibleTermsPanel from "@/components/equity-modeling/ConvertibleTermsPanel";
 
@@ -25,6 +25,7 @@ export default function WaterfallPlaygroundPage() {
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>('exit');
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [hoveredPayout, setHoveredPayout] = useState<any>(null);
+  const [expandedInvestors, setExpandedInvestors] = useState<Set<string>>(new Set());
   
   // Playground state
   const {
@@ -55,7 +56,7 @@ export default function WaterfallPlaygroundPage() {
       <EquityLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mx-auto mb-4" />
             <p className="text-gray-600">Loading cap table data...</p>
           </div>
         </div>
@@ -113,23 +114,19 @@ export default function WaterfallPlaygroundPage() {
         </div>
       }
     >
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Waterfall Playground</h1>
-      </div>
-      
-      <div className="flex gap-6" style={{ height: 'calc(100vh - 220px)' }}>
+      <div className="flex gap-6" style={{ height: 'calc(100vh - 180px)' }}>
         {/* Left Sidebar */}
         <div className="w-[420px] flex-shrink-0">
-          <Card className="h-full flex flex-col">
+          <Card className={`flex flex-col ${sidebarTab === 'exit' ? 'h-auto' : 'h-full'}`}>
             {/* Sidebar Tabs */}
-            <div className="border-b border-gray-200">
-              <nav className="flex">
+            <div className="p-2">
+              <nav className="flex gap-1">
                 <button
                   onClick={() => setSidebarTab('exit')}
-                  className={`flex-1 py-3 px-4 border-b-2 font-medium text-sm transition-colors flex items-center justify-center gap-2 ${
+                  className={`flex-1 py-2 px-3 rounded-md font-medium text-sm transition-colors flex items-center justify-center gap-2 ${
                     sidebarTab === 'exit'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   <DollarSign className="size-4" />
@@ -137,10 +134,10 @@ export default function WaterfallPlaygroundPage() {
                 </button>
                 <button
                   onClick={() => setSidebarTab('terms')}
-                  className={`flex-1 py-3 px-4 border-b-2 font-medium text-sm transition-colors flex items-center justify-center gap-2 ${
+                  className={`flex-1 py-2 px-3 rounded-md font-medium text-sm transition-colors flex items-center justify-center gap-2 ${
                     sidebarTab === 'terms'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   <Settings className="size-4" />
@@ -150,31 +147,25 @@ export default function WaterfallPlaygroundPage() {
             </div>
 
             {/* Sidebar Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className={`p-6 ${sidebarTab === 'terms' ? 'flex-1 overflow-y-auto' : ''}`}>
               {sidebarTab === 'exit' ? (
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Exit Scenario</h3>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Exit Amount
-                    </label>
-                    <ExitAmountControl
-                      exitAmountCents={scenario.exitAmountCents}
-                      onExitAmountChange={updateExitAmount}
-                    />
-                    <p className="text-sm text-gray-500 mt-4">
-                      <strong>Tip:</strong> Low exits favor liquidation preferences, high exits favor common shareholders
+                <div className="space-y-6">
+                  <ExitAmountControl
+                    exitAmountCents={scenario.exitAmountCents}
+                    onExitAmountChange={updateExitAmount}
+                  />
+                  <div className="text-sm text-gray-500 border-t pt-4">
+                    <p className="flex items-start gap-2">
+                      <span className="text-gray-400">💡</span>
+                      <span>Low exits favor liquidation preferences, high exits favor common shareholders</span>
                     </p>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div>
-                    <ShareClassTermsPanel className="shadow-none border-0 p-0" />
-                  </div>
-                  <div className="border-t pt-6">
-                    <ConvertibleTermsPanel className="shadow-none border-0 p-0" />
-                  </div>
+                  <ShareClassTermsPanel className="shadow-none border-0 p-0" />
+                  <hr className="border-gray-200" />
+                  <ConvertibleTermsPanel className="shadow-none border-0 p-0" />
                 </div>
               )}
             </div>
@@ -203,72 +194,164 @@ export default function WaterfallPlaygroundPage() {
           </Card>
 
           {/* Breakdown - Expandable */}
-          <Card className={`overflow-hidden transition-all duration-300 ${showBreakdown ? 'flex-1' : 'flex-none'}`}>
+          <Card className={`overflow-hidden transition-all duration-300 flex flex-col ${showBreakdown ? 'flex-1' : 'flex-none'}`}>
             <button
               onClick={() => setShowBreakdown(!showBreakdown)}
               className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
             >
-              <span className="font-medium">Detailed Breakdown</span>
+              <span className="font-medium">Investor Breakdown</span>
               {showBreakdown ? <ChevronUp className="size-5" /> : <ChevronDown className="size-5" />}
             </button>
             
             {showBreakdown && (
-              <div className="px-6 pb-6 border-t border-gray-200 overflow-hidden flex flex-col" style={{ maxHeight: 'calc(100vh - 400px)' }}>
-                {isCalculating ? (
-                  <div className="flex items-center justify-center h-32 text-gray-500">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3" />
-                    Calculating...
-                  </div>
-                ) : payouts.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <div className="text-lg font-medium">No Payouts</div>
-                    <div className="text-sm">Configure your cap table to see distributions</div>
-                  </div>
-                ) : (
-                  <div className="overflow-auto mt-4 flex-1">
-                    <table className="w-full text-sm">
-                      <thead className="sticky top-0 bg-white z-10">
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-3 px-2 font-medium text-gray-700">Investor</th>
-                          <th className="text-left py-3 px-2 font-medium text-gray-700">Share Class</th>
-                          <th className="text-right py-3 px-2 font-medium text-gray-700">Shares</th>
-                          <th className="text-right py-3 px-2 font-medium text-gray-700">Liquidation</th>
-                          <th className="text-right py-3 px-2 font-medium text-gray-700">Participation</th>
-                          <th className="text-right py-3 px-2 font-medium text-gray-700">Common</th>
-                          <th className="text-right py-3 px-2 font-medium text-gray-700">Total Payout</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {payouts.map((payout) => (
-                          <tr 
-                            key={payout.id} 
-                            className={`border-b border-gray-100 hover:bg-gray-50 ${
-                              hoveredPayout?.id === payout.id ? 'bg-blue-50' : ''
-                            }`}
-                            onMouseEnter={() => setHoveredPayout(payout)}
-                            onMouseLeave={() => setHoveredPayout(null)}
-                          >
-                            <td className="py-3 px-2 font-medium">{payout.investorName}</td>
-                            <td className="py-3 px-2 text-gray-600">{payout.shareClassName}</td>
-                            <td className="py-3 px-2 text-right">{payout.numberOfShares.toLocaleString()}</td>
-                            <td className="py-3 px-2 text-right">
-                              {formatMoneyFromCents(payout.liquidationPreferenceAmount)}
-                            </td>
-                            <td className="py-3 px-2 text-right">
-                              {formatMoneyFromCents(payout.participationAmount)}
-                            </td>
-                            <td className="py-3 px-2 text-right">
-                              {formatMoneyFromCents(payout.commonProceedsAmount)}
-                            </td>
-                            <td className="py-3 px-2 text-right font-semibold">
-                              {formatMoneyFromCents(payout.payoutAmountCents)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+              <div className="border-t border-gray-200 flex-1 overflow-hidden flex flex-col">
+                <div className="p-6 overflow-y-auto flex-1">
+                  {isCalculating ? (
+                    <div className="flex items-center justify-center h-32 text-gray-500">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400 mr-3" />
+                      Calculating...
+                    </div>
+                  ) : payouts.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <div className="text-lg font-medium">No Payouts</div>
+                      <div className="text-sm">Configure your cap table to see distributions</div>
+                    </div>
+                  ) : (() => {
+                    // Group payouts by investor
+                    const investorGroups = payouts.reduce((acc, payout) => {
+                      if (!acc[payout.investorName]) {
+                        acc[payout.investorName] = {
+                          name: payout.investorName,
+                          payouts: [],
+                          totalAmount: 0,
+                        };
+                      }
+                      acc[payout.investorName].payouts.push(payout);
+                      acc[payout.investorName].totalAmount += Number(payout.payoutAmountCents);
+                      return acc;
+                    }, {} as Record<string, { name: string; payouts: typeof payouts; totalAmount: number }>);
+                    
+                    const totalExitAmount = Number(scenario.exitAmountCents);
+                    const sortedInvestors = Object.values(investorGroups).sort((a, b) => b.totalAmount - a.totalAmount);
+                    
+                    return (
+                      <div className="space-y-1">
+                        {sortedInvestors.map((investor) => {
+                          const percentage = (investor.totalAmount / totalExitAmount) * 100;
+                          const isExpanded = expandedInvestors.has(investor.name);
+                          
+                          return (
+                            <div key={investor.name} className="border border-gray-200 rounded-lg overflow-hidden">
+                              {/* Investor Summary Row */}
+                              <div
+                                className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                                onClick={() => {
+                                  const newExpanded = new Set(expandedInvestors);
+                                  if (isExpanded) {
+                                    newExpanded.delete(investor.name);
+                                  } else {
+                                    newExpanded.add(investor.name);
+                                  }
+                                  setExpandedInvestors(newExpanded);
+                                }}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <ChevronRight 
+                                      className={`size-4 text-gray-400 transition-transform ${
+                                        isExpanded ? 'rotate-90' : ''
+                                      }`} 
+                                    />
+                                    <span className="font-medium text-gray-900">{investor.name}</span>
+                                    <span className="text-sm text-gray-500">
+                                      ({investor.payouts.length} {investor.payouts.length === 1 ? 'holding' : 'holdings'})
+                                    </span>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-4">
+                                    {/* Percentage Bar */}
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-24 bg-gray-100 rounded-full h-2">
+                                        <div 
+                                          className="bg-gray-600 h-full rounded-full transition-all"
+                                          style={{ width: `${Math.min(percentage, 100)}%` }}
+                                        />
+                                      </div>
+                                      <span className="text-sm text-gray-600 w-12 text-right">
+                                        {percentage.toFixed(1)}%
+                                      </span>
+                                    </div>
+                                    
+                                    {/* Total Amount */}
+                                    <span className="font-semibold text-gray-900 w-20 text-right">
+                                      {formatCompactMoney(investor.totalAmount)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Expanded Details */}
+                              {isExpanded && (
+                                <div className="bg-gray-50 border-t border-gray-200">
+                                  <table className="w-full text-sm">
+                                    <thead>
+                                      <tr className="text-xs text-gray-500 uppercase tracking-wider">
+                                        <th className="text-left px-4 py-2 font-medium">Share Class</th>
+                                        <th className="text-right px-4 py-2 font-medium">Shares</th>
+                                        <th className="text-right px-4 py-2 font-medium">Liquidation</th>
+                                        <th className="text-right px-4 py-2 font-medium">Participation</th>
+                                        <th className="text-right px-4 py-2 font-medium">Common</th>
+                                        <th className="text-right px-4 py-2 font-medium">Total</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {investor.payouts.map((payout) => (
+                                        <tr 
+                                          key={payout.id}
+                                          className={`border-t border-gray-100 ${
+                                            hoveredPayout?.id === payout.id ? 'bg-blue-50' : ''
+                                          }`}
+                                          onMouseEnter={() => setHoveredPayout(payout)}
+                                          onMouseLeave={() => setHoveredPayout(null)}
+                                        >
+                                          <td className="px-4 py-2 text-gray-700">{payout.shareClassName}</td>
+                                          <td className="px-4 py-2 text-right text-gray-600">
+                                            {payout.numberOfShares.toLocaleString()}
+                                          </td>
+                                          <td className="px-4 py-2 text-right text-gray-600">
+                                            {payout.liquidationPreferenceAmount > 0 
+                                              ? formatCompactMoney(payout.liquidationPreferenceAmount)
+                                              : '-'
+                                            }
+                                          </td>
+                                          <td className="px-4 py-2 text-right text-gray-600">
+                                            {payout.participationAmount > 0 
+                                              ? formatCompactMoney(payout.participationAmount)
+                                              : '-'
+                                            }
+                                          </td>
+                                          <td className="px-4 py-2 text-right text-gray-600">
+                                            {payout.commonProceedsAmount > 0 
+                                              ? formatCompactMoney(payout.commonProceedsAmount)
+                                              : '-'
+                                            }
+                                          </td>
+                                          <td className="px-4 py-2 text-right font-medium text-gray-900">
+                                            {formatCompactMoney(payout.payoutAmountCents)}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
               </div>
             )}
           </Card>

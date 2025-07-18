@@ -32,40 +32,43 @@ export default function ShareClassTermsPanel({ className }: ShareClassTermsPanel
   const sortedShareClasses = [...shareClasses].sort((a, b) => a.seniorityRank - b.seniorityRank);
 
   return (
-    <Card className={className}>
-      <div className={className?.includes('p-0') ? '' : 'p-6'}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Share Classes</h3>
-          <Button
-            size="small"
-            variant="outline"
-            onClick={handleAddShareClass}
-          >
-            <Plus className="size-4 mr-1" />
-            Add
-          </Button>
-        </div>
+    <div className={className}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-medium">Share Classes</h3>
+        <Button
+          size="small"
+          variant="ghost"
+          onClick={handleAddShareClass}
+          className="text-gray-600 hover:text-gray-900"
+        >
+          <Plus className="size-3.5 mr-1" />
+          Add
+        </Button>
+      </div>
 
         <div className="space-y-4">
           {sortedShareClasses.map((shareClass, index) => (
             <div
               key={shareClass.id}
-              className={`border rounded-lg p-4 ${
-                shareClass.isHypothetical ? 'border-dashed border-gray-300 bg-gray-50' : 'border-gray-200'
+              className={`p-4 rounded-lg ${
+                shareClass.isHypothetical ? 'bg-gray-50' : 'bg-gray-50/50'
               }`}
             >
               <div className="space-y-3">
                 {/* Header Row */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mb-3">
                   <Input
                     value={shareClass.name}
                     onChange={(e) => updateShareClass(shareClass.id, { name: e.target.value })}
-                    className="flex-1 font-medium"
+                    className="flex-1 font-medium border-0 bg-white"
+                    placeholder="Share class name"
                   />
 
-                  <Badge variant={shareClass.isHypothetical ? "secondary" : "default"}>
+                  <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                    shareClass.isHypothetical ? 'bg-gray-200 text-gray-600' : 'bg-gray-700 text-white'
+                  }`}>
                     {shareClass.isHypothetical ? 'HYPO' : 'DB'}
-                  </Badge>
+                  </span>
 
                   {shareClass.isHypothetical && (
                     <button
@@ -78,10 +81,10 @@ export default function ShareClassTermsPanel({ className }: ShareClassTermsPanel
                 </div>
 
                 {/* Terms Grid */}
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   <div>
-                    <label className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1">
-                      Liquidation Pref
+                    <label className="flex items-center gap-1 text-xs font-medium text-gray-500 mb-1">
+                      Liquidation Preference
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -94,23 +97,21 @@ export default function ShareClassTermsPanel({ className }: ShareClassTermsPanel
                         </Tooltip>
                       </TooltipProvider>
                     </label>
-                    <div className="flex items-center gap-1">
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.5"
-                        value={shareClass.liquidationPreferenceMultiple}
-                        onChange={(e) => updateShareClass(shareClass.id, { 
-                          liquidationPreferenceMultiple: parseFloat(e.target.value) || 0 
-                        })}
-                        className="text-right text-sm"
-                      />
-                      <span className="text-xs text-gray-500">x</span>
-                    </div>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      value={shareClass.liquidationPreferenceMultiple}
+                      onChange={(e) => updateShareClass(shareClass.id, { 
+                        liquidationPreferenceMultiple: parseFloat(e.target.value) || 0 
+                      })}
+                      className="text-sm"
+                      placeholder="1.0"
+                    />
                   </div>
 
                   <div>
-                    <label className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1">
+                    <label className="flex items-center gap-1 text-xs font-medium text-gray-500 mb-1">
                       Participation
                       <TooltipProvider>
                         <Tooltip>
@@ -143,69 +144,38 @@ export default function ShareClassTermsPanel({ className }: ShareClassTermsPanel
                         }
                       }}
                     >
-                      <SelectTrigger className="text-sm">
+                      <SelectTrigger className="text-sm w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        <SelectItem value="capped">Capped</SelectItem>
-                        <SelectItem value="full">Full</SelectItem>
+                        <SelectItem value="none">Non-participating</SelectItem>
+                        <SelectItem value="capped">Capped participation</SelectItem>
+                        <SelectItem value="full">Full participation</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {shareClass.participating && shareClass.participationCapMultiple !== undefined && (
                     <div>
-                      <label className="text-xs font-medium text-gray-600 mb-1 block">
-                        Cap Multiple
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">
+                        Participation Cap
                       </label>
-                      <div className="flex items-center gap-1">
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.5"
-                          value={shareClass.participationCapMultiple}
-                          onChange={(e) => updateShareClass(shareClass.id, { 
-                            participationCapMultiple: parseFloat(e.target.value) || 0 
-                          })}
-                          className="text-right text-sm"
-                        />
-                        <span className="text-xs text-gray-500">x</span>
-                      </div>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={shareClass.participationCapMultiple}
+                        onChange={(e) => updateShareClass(shareClass.id, { 
+                          participationCapMultiple: parseFloat(e.target.value) || 0 
+                        })}
+                        className="text-sm"
+                        placeholder="3.0"
+                      />
                     </div>
                   )}
 
                   <div>
-                    <label className="text-xs font-medium text-gray-600 mb-1 block">
-                      Seniority
-                    </label>
-                    <div className="text-lg font-bold text-gray-800">#{index + 1}</div>
-                  </div>
-                </div>
-
-                {/* Additional Fields */}
-                <div className="grid grid-cols-4 gap-4 pt-2 border-t border-gray-100">
-                  <div>
-                    <label className="text-xs font-medium text-gray-600 mb-1 block">
-                      Issue Price
-                    </label>
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs text-gray-500">$</span>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={shareClass.originalIssuePriceInDollars}
-                        onChange={(e) => updateShareClass(shareClass.id, { 
-                          originalIssuePriceInDollars: parseFloat(e.target.value) || 0 
-                        })}
-                        className="text-right text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-medium text-gray-600 mb-1 block">
+                    <label className="text-xs font-medium text-gray-500 mb-1 block">
                       Type
                     </label>
                     <Select
@@ -214,7 +184,7 @@ export default function ShareClassTermsPanel({ className }: ShareClassTermsPanel
                         preferred: value === 'preferred' 
                       })}
                     >
-                      <SelectTrigger className="text-sm">
+                      <SelectTrigger className="text-sm w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -223,19 +193,44 @@ export default function ShareClassTermsPanel({ className }: ShareClassTermsPanel
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 mb-1 block">
+                      Issue Price
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={shareClass.originalIssuePriceInDollars}
+                      onChange={(e) => updateShareClass(shareClass.id, { 
+                        originalIssuePriceInDollars: parseFloat(e.target.value) || 0 
+                      })}
+                      className="text-sm"
+                      placeholder="$0.00"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 mb-1 block">
+                      Seniority Rank
+                    </label>
+                    <div className="text-sm font-semibold text-gray-700 bg-gray-100 rounded px-3 py-1.5 text-center">
+                      #{index + 1}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
 
           {shareClasses.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <p className="text-sm mb-2">No share classes configured</p>
-              <p className="text-xs">Click "Add" to create a share class</p>
+            <div className="text-center py-12 text-gray-400">
+              <p className="text-sm">No share classes configured</p>
+              <p className="text-xs mt-1">Click "Add" to create a share class</p>
             </div>
           )}
         </div>
-      </div>
-    </Card>
+    </div>
   );
 }

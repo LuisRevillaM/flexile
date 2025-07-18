@@ -112,20 +112,20 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
   };
 
   return (
-    <Card className={className}>
-      <div className={className?.includes('p-0') ? '' : 'p-6'}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Convertible Securities</h3>
-          <Button
-            size="small"
-            variant="outline"
-            onClick={handleAddConvertible}
-            disabled={investors.length === 0}
-          >
-            <Plus className="size-4 mr-1" />
-            Add
-          </Button>
-        </div>
+    <div className={className}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-medium">Convertible Securities</h3>
+        <Button
+          size="small"
+          variant="ghost"
+          onClick={handleAddConvertible}
+          disabled={investors.length === 0}
+          className="text-gray-600 hover:text-gray-900 disabled:text-gray-400"
+        >
+          <Plus className="size-3.5 mr-1" />
+          Add
+        </Button>
+      </div>
 
         <div className="space-y-3">
           {convertibleSecurities.map((security) => {
@@ -135,32 +135,27 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
             return (
               <div
                 key={security.id}
-                className={`border rounded-lg ${
-                  security.isHypothetical ? 'border-dashed border-gray-300 bg-gray-50' : 'border-gray-200'
+                className={`rounded-lg ${
+                  security.isHypothetical ? 'bg-gray-50' : 'bg-gray-50/50'
                 }`}
               >
                 <div className="p-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <button
-                      onClick={() => toggleExpanded(security.id)}
-                      className="p-1 hover:bg-gray-100 rounded"
-                    >
-                      {expandedSecurities.has(security.id) ? (
-                        <ChevronDown className="size-4" />
-                      ) : (
-                        <ChevronRight className="size-4" />
-                      )}
-                    </button>
-
-                    <div className="flex-1">
-                      <div className="font-medium">
-                        {getSecurityTypeName(security)} - {getInvestorName(security.investorId)}
-                      </div>
+                    <div className="flex-1 flex items-center gap-2">
+                      <span className="font-medium text-sm">
+                        {getSecurityTypeName(security)}
+                      </span>
+                      <span className="text-sm text-gray-500">•</span>
+                      <span className="text-sm text-gray-600">
+                        {getInvestorName(security.investorId)}
+                      </span>
                     </div>
 
-                    <Badge variant={security.isHypothetical ? "secondary" : "default"}>
+                    <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                      security.isHypothetical ? 'bg-gray-200 text-gray-600' : 'bg-gray-700 text-white'
+                    }`}>
                       {security.isHypothetical ? 'HYPO' : 'DB'}
-                    </Badge>
+                    </span>
 
                     {security.isHypothetical && (
                       <button
@@ -173,14 +168,12 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
                   </div>
 
                   {/* Basic Terms - Always Visible */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                     <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">
-                        Principal
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">
+                        Principal Amount
                       </label>
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm text-gray-500">$</span>
-                        <Input
+                      <Input
                           type="number"
                           min="0"
                           step="10000"
@@ -188,13 +181,13 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
                           onChange={(e) => updateConvertibleSecurity(security.id, { 
                             principalValueInCents: Math.round((parseFloat(e.target.value) || 0) * 100)
                           })}
-                          className="text-right"
+                          className="text-sm"
+                          placeholder="$0"
                         />
-                      </div>
                     </div>
 
                     <div>
-                      <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex items-center gap-1 text-xs font-medium text-gray-500 mb-1">
                         Valuation Cap
                         <TooltipProvider>
                           <Tooltip>
@@ -208,9 +201,7 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
                           </Tooltip>
                         </TooltipProvider>
                       </label>
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm text-gray-500">$</span>
-                        <Input
+                      <Input
                           type="number"
                           min="0"
                           step="100000"
@@ -226,13 +217,12 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
                             }
                           }}
                           placeholder="No cap"
-                          className="text-right"
+                          className="text-sm"
                         />
-                      </div>
                     </div>
 
                     <div>
-                      <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex items-center gap-1 text-xs font-medium text-gray-500 mb-1">
                         Discount Rate
                         <TooltipProvider>
                           <Tooltip>
@@ -246,8 +236,7 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
                           </Tooltip>
                         </TooltipProvider>
                       </label>
-                      <div className="flex items-center gap-1">
-                        <Input
+                      <Input
                           type="number"
                           min="0"
                           max="100"
@@ -263,24 +252,20 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
                               updateConvertibleSecurity(security.id, { discountRatePercent: undefined });
                             }
                           }}
-                          placeholder="No discount"
-                          className="text-right"
+                          placeholder="0%"
+                          className="text-sm"
                         />
-                        <span className="text-sm text-gray-500">%</span>
-                      </div>
                     </div>
 
                     {/* Conversion Preview */}
-                    <div className="bg-blue-50 rounded p-2">
-                      <div className="flex items-center gap-1 text-xs font-medium text-blue-700 mb-1">
+                    <div className="bg-gray-100 rounded-md p-3">
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600 mb-1">
                         <Calculator className="size-3" />
-                        Conversion Preview
+                        <span>Conversion Preview</span>
                       </div>
-                      <div className="text-xs text-blue-600">
-                        ~{preview.shares.toLocaleString()} shares @ ${preview.pricePerShare.toFixed(2)}
-                      </div>
-                      <div className="text-xs text-blue-600">
-                        Total: {formatMoneyFromCents(preview.totalValue * 100)}
+                      <div className="text-xs text-gray-600 space-y-0.5">
+                        <div>~{preview.shares.toLocaleString()} shares</div>
+                        <div>{formatMoneyFromCents(preview.totalValue * 100)} total value</div>
                       </div>
                     </div>
                   </div>
@@ -288,17 +273,16 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
                   {/* Advanced Terms Toggle */}
                   <button
                     onClick={() => toggleExpanded(security.id)}
-                    className="mt-3 flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                    className="mt-3 flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
                   >
                     {expandedSecurities.has(security.id) ? (
-                      <ChevronDown className="size-4" />
+                      <ChevronDown className="size-3" />
                     ) : (
-                      <ChevronRight className="size-4" />
+                      <ChevronRight className="size-3" />
                     )}
-                    <span className="font-medium">
-                      {expandedSecurities.has(security.id) ? 'Hide' : 'Show'} Advanced Terms
+                    <span>
+                      {expandedSecurities.has(security.id) ? 'Hide' : 'Show'} advanced options
                     </span>
-                    <span className="text-gray-500">(Type, Dates, Investor)</span>
                   </button>
 
                   {/* Expanded Terms */}
@@ -433,9 +417,9 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
           })}
 
           {convertibleSecurities.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <p className="text-sm mb-2">No convertible securities configured</p>
-              <p className="text-xs">
+            <div className="text-center py-12 text-gray-400">
+              <p className="text-sm">No convertible securities configured</p>
+              <p className="text-xs mt-1">
                 {investors.length === 0 
                   ? 'Add investors first, then create convertibles'
                   : 'Click "Add" to create a SAFE or convertible note'
@@ -444,7 +428,6 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
             </div>
           )}
         </div>
-      </div>
-    </Card>
+    </div>
   );
 }

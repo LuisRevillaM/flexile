@@ -102,21 +102,9 @@ export default function ExitAmountControl({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Exit Amount</h3>
-        <div className="text-sm text-gray-600">
-          Adjust to see real-time waterfall changes
-        </div>
-      </div>
-
       {/* Direct input */}
       <div className="space-y-2">
-        <label htmlFor="exit-amount" className="block text-sm font-medium text-gray-700">
-          Exit Amount
-        </label>
         <Input
-          id="exit-amount"
           type="text"
           value={inputValue}
           onChange={handleInputChange}
@@ -127,8 +115,8 @@ export default function ExitAmountControl({
           placeholder="$10,000,000"
           className="text-lg font-medium"
         />
-        <div className="text-xs text-gray-500">
-          Enter amount like: 10M, 50000000, or $25,000,000
+        <div className="text-xs text-gray-400">
+          e.g. 10M, 50000000, or $25,000,000
         </div>
       </div>
 
@@ -162,11 +150,11 @@ export default function ExitAmountControl({
             return (
               <Button
                 key={multiplier}
-                variant={isActive ? "default" : "outline"}
+                variant={isActive ? "default" : "ghost"}
                 size="small"
                 onClick={() => handlePresetClick(multiplier)}
                 disabled={disabled}
-                className="text-xs"
+                className={`text-xs ${isActive ? '' : 'text-gray-600 hover:text-gray-900'}`}
               >
                 {formatDollars(amount * 100)}
               </Button>
@@ -175,11 +163,6 @@ export default function ExitAmountControl({
         </div>
       </div>
 
-      {/* Analysis hints */}
-      <div className="text-xs text-gray-500 space-y-1">
-        <div>💡 <strong>Low exits:</strong> See liquidation preferences in action</div>
-        <div>💡 <strong>High exits:</strong> See participation rights kick in</div>
-      </div>
     </div>
   );
 }
