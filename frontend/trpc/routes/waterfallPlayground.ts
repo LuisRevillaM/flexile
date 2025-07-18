@@ -82,16 +82,16 @@ export const waterfallPlaygroundRouter = createRouter({
       // Transform the data to a simpler format
       return {
         investors: allInvestors,
-        shareClasses: shareClassesData.map(sc => ({
+        shareClasses: shareClassesData.map((sc, index) => ({
           id: sc.id,
           name: sc.name,
-          preferred: sc.preferred || false,
+          preferred: sc.name.toLowerCase().includes('preferred'),
           originalIssuePriceInDollars: sc.originalIssuePriceInDollars,
-          // Waterfall terms - these might not exist yet in the database
-          liquidationPreferenceMultiple: sc.liquidationPreferenceMultiple || 1.0,
-          participating: sc.participating || false,
-          participationCapMultiple: sc.participationCapMultiple || null,
-          seniorityRank: sc.seniorityRank || 0,
+          // Default waterfall terms since they don't exist in DB
+          liquidationPreferenceMultiple: sc.name.toLowerCase().includes('preferred') ? 1.0 : 0,
+          participating: false,
+          participationCapMultiple: null,
+          seniorityRank: sc.name.toLowerCase().includes('preferred') ? index : 999, // Preferred classes get priority
         })),
         shareHoldings: shareHoldingsData.map(sh => ({
           id: sh.share_holdings.id,

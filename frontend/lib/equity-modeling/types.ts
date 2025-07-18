@@ -38,7 +38,7 @@ export interface PlaygroundConvertibleSecurity {
   impliedShares: number;
   
   // ALL convertible terms configurable
-  valuationCapCents?: number;
+  valuationCapCents?: bigint;
   discountRatePercent?: number;
   interestRatePercent?: number;
   maturityDate?: Date;

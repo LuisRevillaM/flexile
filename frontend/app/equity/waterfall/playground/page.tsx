@@ -12,6 +12,8 @@ import ExitAmountControl from "@/components/ExitAmountControl";
 import { usePlayground } from "@/lib/equity-modeling/store";
 import { useLoadCapTable } from "@/lib/equity-modeling/useLoadCapTable";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
+import ShareClassTermsPanel from "@/components/equity-modeling/ShareClassTermsPanel";
+import ConvertibleTermsPanel from "@/components/equity-modeling/ConvertibleTermsPanel";
 
 export default function WaterfallPlaygroundPage() {
   const company = useCurrentCompany();
@@ -264,18 +266,24 @@ export default function WaterfallPlaygroundPage() {
               </div>
             </Card>
 
-            {/* Placeholder for configuration panels */}
-            <Card className="p-6">
-              <div className="text-center text-gray-500 py-8">
-                <p className="text-sm mb-2">Configuration panels coming soon:</p>
-                <div className="text-xs space-y-1">
-                  <p>• Investor Management</p>
-                  <p>• Share Class Configuration</p>
-                  <p>• Convertible Securities</p>
-                  <p>• Holdings Editor</p>
-                </div>
-              </div>
-            </Card>
+            {/* Configuration Panels */}
+            {activeTab === 'configuration' && (
+              <>
+                <ShareClassTermsPanel />
+                <ConvertibleTermsPanel />
+                
+                {/* Placeholder for other panels */}
+                <Card className="p-6">
+                  <div className="text-center text-gray-500 py-8">
+                    <p className="text-sm mb-2">More configuration panels coming soon:</p>
+                    <div className="text-xs space-y-1">
+                      <p>• Holdings Editor</p>
+                      <p>• New Investment Round Modeler</p>
+                    </div>
+                  </div>
+                </Card>
+              </>
+            )}
           </div>
 
           {/* Visualization Panel */}
@@ -315,10 +323,10 @@ export default function WaterfallPlaygroundPage() {
                             <th className="text-left py-3 px-2 font-medium text-gray-700">Investor</th>
                             <th className="text-left py-3 px-2 font-medium text-gray-700">Share Class</th>
                             <th className="text-right py-3 px-2 font-medium text-gray-700">Shares</th>
-                            <th className="text-right py-3 px-2 font-medium text-gray-700">Preference</th>
+                            <th className="text-right py-3 px-2 font-medium text-gray-700">Liquidation</th>
                             <th className="text-right py-3 px-2 font-medium text-gray-700">Participation</th>
                             <th className="text-right py-3 px-2 font-medium text-gray-700">Common</th>
-                            <th className="text-right py-3 px-2 font-medium text-gray-700">Total</th>
+                            <th className="text-right py-3 px-2 font-medium text-gray-700">Total Payout</th>
                           </tr>
                         </thead>
                         <tbody>

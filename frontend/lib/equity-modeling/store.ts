@@ -322,10 +322,10 @@ export const usePlayground = create<PlaygroundStore>()(
       set((state) => ({
         ...state,
         scenario: config.scenario,
-        investors: config.equityStructure.investors,
-        shareClasses: config.equityStructure.shareClasses,
-        shareHoldings: config.equityStructure.shareHoldings,
-        convertibleSecurities: config.equityStructure.convertibleSecurities,
+        investors: config.equityStructure?.investors || [],
+        shareClasses: config.equityStructure?.shareClasses || [],
+        shareHoldings: config.equityStructure?.shareHoldings || [],
+        convertibleSecurities: config.equityStructure?.convertibleSecurities || [],
         hasUnsavedChanges: true,
       }));
     },
