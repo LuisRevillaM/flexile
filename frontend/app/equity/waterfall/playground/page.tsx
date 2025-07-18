@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Save, Download, RotateCcw, ArrowLeft, HelpCircle } from "lucide-react";
+import { Download, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -32,13 +32,10 @@ export default function WaterfallPlaygroundPage() {
     scenario,
     payouts,
     isCalculating,
-    hasUnsavedChanges,
-    activeTab,
     updateExitAmount,
-    updateScenario,
     resetToDefaults,
     exportConfiguration,
-    setActiveTab,
+    hasUnsavedChanges,
   } = usePlayground();
   
   // Load cap table data from database - must be called before any conditional returns
@@ -100,14 +97,6 @@ export default function WaterfallPlaygroundPage() {
           <Button 
             variant="outline" 
             size="small" 
-            onClick={() => window.history.back()}
-          >
-            <ArrowLeft className="size-4 mr-2" />
-            Back
-          </Button>
-          <Button 
-            variant="outline" 
-            size="small" 
             onClick={resetToDefaults}
             disabled={!hasUnsavedChanges}
           >
@@ -122,248 +111,111 @@ export default function WaterfallPlaygroundPage() {
             <Download className="size-4 mr-2" />
             Export
           </Button>
-          <Button 
-            size="small" 
-            disabled={!hasUnsavedChanges}
-          >
-            <Save className="size-4 mr-2" />
-            Save Configuration
-          </Button>
         </div>
       }
     >
       <div className="space-y-6">
-        {/* Status bar */}
-        {hasUnsavedChanges && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-yellow-800">
-              <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
-              <span className="text-sm font-medium">Unsaved changes</span>
-              <span className="text-sm">Your configuration will be lost unless saved</span>
-            </div>
-          </div>
-        )}
-
         {/* Page Header */}
         <div className="border-b border-gray-200 pb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Waterfall Playground</h1>
-              <p className="text-gray-600">Configure all cap table terms and model liquidation scenarios</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="small">
-                <HelpCircle className="size-4 mr-2" />
-                Guide
-              </Button>
-            </div>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Waterfall Playground</h1>
+          <p className="text-gray-600">Configure cap table terms and see real-time liquidation scenarios</p>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8">
-            <button
-              onClick={() => setActiveTab('configuration')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'configuration'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Configuration
-            </button>
-            <button
-              onClick={() => setActiveTab('visualization')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'visualization'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Visualization
-            </button>
-          </nav>
+        {/* Sticky Visualization Section */}
+        <div className="sticky top-0 z-10 bg-white pb-6">
+          <Card className="p-6">
+            <div className="space-y-4">
+              {/* Exit Amount Control */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Exit Amount
+                </label>
+                <ExitAmountControl
+                  exitAmountCents={scenario.exitAmountCents}
+                  onExitAmountChange={updateExitAmount}
+                />
+              </div>
+
+              {/* Waterfall Chart */}
+              <div>
+                <WaterfallChartPro
+                  payouts={payouts}
+                  exitAmountCents={scenario.exitAmountCents}
+                  onPayoutHover={setHoveredPayout}
+                  highlightedPayoutId={hoveredPayout?.id}
+                  isCalculating={isCalculating}
+                />
+              </div>
+            </div>
+          </Card>
         </div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Configuration Panel */}
-          <div className="lg:col-span-4 space-y-6">
-            {/* Scenario Settings */}
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Scenario Settings</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Scenario Name
-                  </label>
-                  <input
-                    type="text"
-                    value={scenario.name}
-                    onChange={(e) => updateScenario({ name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Exit Amount
-                  </label>
-                  <ExitAmountControl
-                    exitAmountCents={scenario.exitAmountCents}
-                    onExitAmountChange={updateExitAmount}
-                  />
-                </div>
+        {/* Scrollable Configuration Area */}
+        <div className="space-y-6">
+          {/* Configuration Panels */}
+          <ShareClassTermsPanel />
+          <ConvertibleTermsPanel />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Exit Date
-                  </label>
-                  <input
-                    type="date"
-                    value={scenario.exitDate.toISOString().split('T')[0]}
-                    onChange={(e) => updateScenario({ exitDate: new Date(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={scenario.description || ''}
-                    onChange={(e) => updateScenario({ description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    rows={3}
-                    placeholder="Describe this scenario..."
-                  />
-                </div>
+          {/* Detailed Breakdown */}
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Detailed Breakdown</h3>
+            
+            {isCalculating ? (
+              <div className="flex items-center justify-center h-32 text-gray-500">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3" />
+                Calculating...
               </div>
-            </Card>
-
-            {/* Quick Stats */}
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Quick Stats</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">{investors.length}</div>
-                  <div className="text-sm text-gray-500">Investors</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">{shareClasses.length}</div>
-                  <div className="text-sm text-gray-500">Share Classes</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">{shareHoldings.length}</div>
-                  <div className="text-sm text-gray-500">Holdings</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">{convertibleSecurities.length}</div>
-                  <div className="text-sm text-gray-500">Convertibles</div>
-                </div>
+            ) : payouts.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <div className="text-lg font-medium">No Payouts</div>
+                <div className="text-sm">Configure your cap table to see distributions</div>
               </div>
-            </Card>
-
-            {/* Configuration Panels */}
-            {activeTab === 'configuration' && (
-              <>
-                <ShareClassTermsPanel />
-                <ConvertibleTermsPanel />
-                
-                {/* Placeholder for other panels */}
-                <Card className="p-6">
-                  <div className="text-center text-gray-500 py-8">
-                    <p className="text-sm mb-2">More configuration panels coming soon:</p>
-                    <div className="text-xs space-y-1">
-                      <p>• Holdings Editor</p>
-                      <p>• New Investment Round Modeler</p>
-                    </div>
-                  </div>
-                </Card>
-              </>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-2 font-medium text-gray-700">Investor</th>
+                      <th className="text-left py-3 px-2 font-medium text-gray-700">Share Class</th>
+                      <th className="text-right py-3 px-2 font-medium text-gray-700">Shares</th>
+                      <th className="text-right py-3 px-2 font-medium text-gray-700">Liquidation</th>
+                      <th className="text-right py-3 px-2 font-medium text-gray-700">Participation</th>
+                      <th className="text-right py-3 px-2 font-medium text-gray-700">Common</th>
+                      <th className="text-right py-3 px-2 font-medium text-gray-700">Total Payout</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payouts.map((payout) => (
+                      <tr 
+                        key={payout.id} 
+                        className={`border-b border-gray-100 hover:bg-gray-50 ${
+                          hoveredPayout?.id === payout.id ? 'bg-blue-50' : ''
+                        }`}
+                        onMouseEnter={() => setHoveredPayout(payout)}
+                        onMouseLeave={() => setHoveredPayout(null)}
+                      >
+                        <td className="py-3 px-2 font-medium">{payout.investorName}</td>
+                        <td className="py-3 px-2 text-gray-600">{payout.shareClassName}</td>
+                        <td className="py-3 px-2 text-right">{payout.numberOfShares.toLocaleString()}</td>
+                        <td className="py-3 px-2 text-right">
+                          {formatMoneyFromCents(payout.liquidationPreferenceAmount)}
+                        </td>
+                        <td className="py-3 px-2 text-right">
+                          {formatMoneyFromCents(payout.participationAmount)}
+                        </td>
+                        <td className="py-3 px-2 text-right">
+                          {formatMoneyFromCents(payout.commonProceedsAmount)}
+                        </td>
+                        <td className="py-3 px-2 text-right font-semibold">
+                          {formatMoneyFromCents(payout.payoutAmountCents)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
-          </div>
-
-          {/* Visualization Panel */}
-          <div className="lg:col-span-8">
-            <Card className="p-6">
-              <div className="space-y-6">
-                {/* Waterfall Chart */}
-                <div>
-                  <WaterfallChartPro
-                    payouts={payouts}
-                    exitAmountCents={scenario.exitAmountCents}
-                    onPayoutHover={setHoveredPayout}
-                    highlightedPayoutId={hoveredPayout?.id}
-                    isCalculating={isCalculating}
-                  />
-                </div>
-
-                {/* Detailed Breakdown */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Detailed Breakdown</h3>
-                  
-                  {isCalculating ? (
-                    <div className="flex items-center justify-center h-32 text-gray-500">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3" />
-                      Calculating...
-                    </div>
-                  ) : payouts.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <div className="text-lg font-medium">No Payouts</div>
-                      <div className="text-sm">Configure your cap table to see distributions</div>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-gray-200">
-                            <th className="text-left py-3 px-2 font-medium text-gray-700">Investor</th>
-                            <th className="text-left py-3 px-2 font-medium text-gray-700">Share Class</th>
-                            <th className="text-right py-3 px-2 font-medium text-gray-700">Shares</th>
-                            <th className="text-right py-3 px-2 font-medium text-gray-700">Liquidation</th>
-                            <th className="text-right py-3 px-2 font-medium text-gray-700">Participation</th>
-                            <th className="text-right py-3 px-2 font-medium text-gray-700">Common</th>
-                            <th className="text-right py-3 px-2 font-medium text-gray-700">Total Payout</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {payouts.map((payout) => (
-                            <tr 
-                              key={payout.id} 
-                              className={`border-b border-gray-100 hover:bg-gray-50 ${
-                                hoveredPayout?.id === payout.id ? 'bg-blue-50' : ''
-                              }`}
-                              onMouseEnter={() => setHoveredPayout(payout)}
-                              onMouseLeave={() => setHoveredPayout(null)}
-                            >
-                              <td className="py-3 px-2 font-medium">{payout.investorName}</td>
-                              <td className="py-3 px-2 text-gray-600">{payout.shareClassName}</td>
-                              <td className="py-3 px-2 text-right">{payout.numberOfShares.toLocaleString()}</td>
-                              <td className="py-3 px-2 text-right">
-                                {formatMoneyFromCents(payout.liquidationPreferenceAmount)}
-                              </td>
-                              <td className="py-3 px-2 text-right">
-                                {formatMoneyFromCents(payout.participationAmount)}
-                              </td>
-                              <td className="py-3 px-2 text-right">
-                                {formatMoneyFromCents(payout.commonProceedsAmount)}
-                              </td>
-                              <td className="py-3 px-2 text-right font-semibold">
-                                {formatMoneyFromCents(payout.payoutAmountCents)}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Card>
-          </div>
+          </Card>
         </div>
       </div>
     </EquityLayout>

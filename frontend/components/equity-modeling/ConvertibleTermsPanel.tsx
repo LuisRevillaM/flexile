@@ -271,6 +271,22 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
                     </div>
                   </div>
 
+                  {/* Advanced Terms Toggle */}
+                  <button
+                    onClick={() => toggleExpanded(security.id)}
+                    className="mt-3 flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                  >
+                    {expandedSecurities.has(security.id) ? (
+                      <ChevronDown className="size-4" />
+                    ) : (
+                      <ChevronRight className="size-4" />
+                    )}
+                    <span className="font-medium">
+                      {expandedSecurities.has(security.id) ? 'Hide' : 'Show'} Advanced Terms
+                    </span>
+                    <span className="text-gray-500">(Type, Dates, Investor)</span>
+                  </button>
+
                   {/* Expanded Terms */}
                   {expandedSecurities.has(security.id) && (
                     <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">

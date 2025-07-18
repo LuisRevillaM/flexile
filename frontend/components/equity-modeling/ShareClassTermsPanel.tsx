@@ -112,11 +112,12 @@ export default function ShareClassTermsPanel({ className }: ShareClassTermsPanel
                   </button>
                   
                   <div
-                    className="cursor-move"
+                    className="cursor-move p-1 hover:bg-gray-100 rounded"
                     draggable
                     onDragStart={(e) => handleDragStart(e, shareClass.id)}
+                    title="Drag to reorder seniority"
                   >
-                    <GripVertical className="size-4 text-gray-400" />
+                    <GripVertical className="size-4 text-gray-500" />
                   </div>
 
                   <Input
@@ -257,6 +258,22 @@ export default function ShareClassTermsPanel({ className }: ShareClassTermsPanel
                     </div>
                   </div>
                 )}
+
+                {/* Advanced Terms Toggle */}
+                <button
+                  onClick={() => toggleExpanded(shareClass.id)}
+                  className="mt-3 flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                >
+                  {expandedClasses.has(shareClass.id) ? (
+                    <ChevronDown className="size-4" />
+                  ) : (
+                    <ChevronRight className="size-4" />
+                  )}
+                  <span className="font-medium">
+                    {expandedClasses.has(shareClass.id) ? 'Hide' : 'Show'} Advanced Terms
+                  </span>
+                  <span className="text-gray-500">(Issue Price, Share Type)</span>
+                </button>
 
                 {/* Advanced Terms - Expandable */}
                 {expandedClasses.has(shareClass.id) && (

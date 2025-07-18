@@ -67,7 +67,15 @@ interface PlaygroundActions {
   markSaved: () => void;
 }
 
-interface PlaygroundStore extends PlaygroundState, PlaygroundActions {}
+interface PlaygroundStore extends PlaygroundState, PlaygroundActions {
+  // Original loaded data for reset functionality
+  originalData?: {
+    investors: PlaygroundInvestor[];
+    shareClasses: PlaygroundShareClass[];
+    shareHoldings: PlaygroundShareHolding[];
+    convertibleSecurities: PlaygroundConvertibleSecurity[];
+  };
+}
 
 const createDefaultScenario = (): PlaygroundScenario => ({
   name: 'New Scenario',
@@ -123,6 +131,7 @@ export const usePlayground = create<PlaygroundStore>()(
     comparisonScenarios: [],
     history: [],
     hasUnsavedChanges: false,
+    originalData: undefined,
 
     // Investor management
     addInvestor: (investorData) => {
@@ -319,31 +328,46 @@ export const usePlayground = create<PlaygroundStore>()(
     },
 
     importConfiguration: (config) => {
-      set((state) => ({
-        ...state,
-        scenario: config.scenario,
+      const equityData = {
         investors: config.equityStructure?.investors || [],
         shareClasses: config.equityStructure?.shareClasses || [],
         shareHoldings: config.equityStructure?.shareHoldings || [],
         convertibleSecurities: config.equityStructure?.convertibleSecurities || [],
-        hasUnsavedChanges: true,
+      };
+      
+      set((state) => ({
+        ...state,
+        scenario: config.scenario,
+        ...equityData,
+        originalData: equityData, // Save original data for reset
+        hasUnsavedChanges: false,
       }));
     },
 
-    resetToDefaults: () => set(() => ({
-      investors: [],
-      shareClasses: [],
-      shareHoldings: [],
-      convertibleSecurities: [],
-      scenario: createDefaultScenario(),
-      payouts: [],
-      isCalculating: false,
-      activeTab: 'configuration',
-      selectedInvestor: undefined,
-      selectedShareClass: undefined,
-      comparisonScenarios: [],
-      hasUnsavedChanges: false,
-    })),
+    resetToDefaults: () => {
+      const state = get();
+      if (state.originalData) {
+        // Reset to original loaded data
+        set((current) => ({
+          ...current,
+          investors: [...state.originalData.investors],
+          shareClasses: [...state.originalData.shareClasses],
+          shareHoldings: [...state.originalData.shareHoldings],
+          convertibleSecurities: [...state.originalData.convertibleSecurities],
+          hasUnsavedChanges: false,
+        }));
+      } else {
+        // No original data, just clear hypothetical items
+        set((current) => ({
+          ...current,
+          investors: current.investors.filter(i => !i.isHypothetical),
+          shareClasses: current.shareClasses.filter(sc => !sc.isHypothetical),
+          shareHoldings: current.shareHoldings.filter(sh => !sh.isHypothetical),
+          convertibleSecurities: current.convertibleSecurities.filter(cs => !cs.isHypothetical),
+          hasUnsavedChanges: false,
+        }));
+      }
+    },
 
     // History and comparison
     saveToHistory: (name) => {
