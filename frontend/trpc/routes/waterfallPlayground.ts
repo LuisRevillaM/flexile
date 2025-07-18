@@ -1,6 +1,5 @@
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
-import { z } from "zod";
 import { db } from "@/db";
 import { 
   companyInvestors,
@@ -107,10 +106,11 @@ export const waterfallPlaygroundRouter = createRouter({
           investorId: cs.company_investors.externalId,
           convertibleType: cs.convertible_investments.convertibleType,
           principalValueInCents: cs.convertible_securities.principalValueInCents,
-          valuationCapInDollars: cs.convertible_investments.valuationCapInDollars,
-          discountRate: cs.convertible_investments.discountRate,
-          interestRate: cs.convertible_investments.interestRate,
-          maturityDate: cs.convertible_investments.maturityDate,
+          // Properties may not exist in DB yet, use safe access
+          valuationCapInDollars: (cs.convertible_investments as any).valuationCapInDollars || null,
+          discountRate: (cs.convertible_investments as any).discountRate || null,
+          interestRate: (cs.convertible_investments as any).interestRate || null,
+          maturityDate: (cs.convertible_investments as any).maturityDate || null,
           issuedAt: cs.convertible_securities.issuedAt,
         })),
       };

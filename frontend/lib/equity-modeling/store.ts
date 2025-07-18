@@ -419,8 +419,8 @@ export const usePlayground = create<PlaygroundStore>()(
 
     // UI state
     setActiveTab: (activeTab) => set({ activeTab }),
-    setSelectedInvestor: (selectedInvestor) => set({ selectedInvestor }),
-    setSelectedShareClass: (selectedShareClass) => set({ selectedShareClass }),
+    setSelectedInvestor: (selectedInvestor) => set((state) => ({ ...state, selectedInvestor })),
+    setSelectedShareClass: (selectedShareClass) => set((state) => ({ ...state, selectedShareClass })),
     setInitialized: (isInitialized) => set({ isInitialized }),
 
     // Utilities

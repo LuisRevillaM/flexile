@@ -10,6 +10,8 @@ interface WaterfallChartProps {
   onPayoutHover?: (payout: PlaygroundPayout | null) => void;
   highlightedPayoutId?: string;
   isCalculating?: boolean;
+  hideHeader?: boolean;
+  isCompressed?: boolean;
 }
 
 const SHARE_CLASS_COLORS = {
@@ -46,6 +48,8 @@ export default function WaterfallChartPro({
   onPayoutHover,
   highlightedPayoutId,
   isCalculating = false,
+  hideHeader = false,
+  isCompressed = false,
 }: WaterfallChartProps) {
   // Keep track of the last valid chart data to show while calculating
   const [lastValidChartData, setLastValidChartData] = useState<{
@@ -81,12 +85,26 @@ export default function WaterfallChartPro({
 
     // Group payouts by share class for legend
     const shareClassMap = new Map<string, { color: string; amount: number }>();
+    
+    // Determine if we need non-linear scaling (for large exits)
+    const useNonLinearScaling = exitAmount > 50_000_000; // $50M threshold
 
     const segments = payouts
       .filter((p) => p.payoutAmountCents > 0)
       .map((payout) => {
         const color = getShareClassColor(payout.shareClassName);
-        const percentage = (Number(payout.payoutAmountCents) / exitAmount) * 100;
+        const linearPercentage = (Number(payout.payoutAmountCents) / exitAmount) * 100;
+        
+        // Apply non-linear scaling for large exits to maintain visual distinction
+        let visualPercentage = linearPercentage;
+        if (useNonLinearScaling) {
+          // Square root scaling with adjustment factor
+          visualPercentage = Math.sqrt(linearPercentage) * 8;
+          // Ensure minimum visual size for very small segments
+          visualPercentage = Math.max(visualPercentage, 0.5);
+        }
+        
+        const percentage = linearPercentage; // Keep actual percentage for data
 
         // Update share class totals
         const existing = shareClassMap.get(payout.shareClassName) || { color, amount: 0 };
@@ -98,7 +116,8 @@ export default function WaterfallChartPro({
         return {
           payout,
           color,
-          percentage,
+          percentage, // Actual percentage for display
+          visualPercentage, // Visual percentage for rendering
           amount: Number(payout.payoutAmountCents),
         };
       })
@@ -135,11 +154,12 @@ export default function WaterfallChartPro({
   }, [payouts, exitAmountCents, isCalculating, payoutsCalculatedForExitAmount]);
 
   const { segments, totalPaid, shareClasses, exitAmount } = chartData;
+  const useNonLinearScaling = exitAmount > 50_000_000;
 
   if (segments.length === 0) {
     return (
       <div
-        className={`${className} flex h-96 items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50`}
+        className={`${className} flex ${hideHeader ? 'h-full' : 'h-96'} items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50`}
       >
         <div className="text-center">
           <p className="mb-2 text-gray-500">No distributions at this exit amount</p>
@@ -150,35 +170,55 @@ export default function WaterfallChartPro({
   }
 
   return (
-    <div className={`${className} rounded-lg border border-gray-200 bg-white p-6`}>
+    <div className={`${className} ${hideHeader ? '' : 'rounded-lg border border-gray-200 bg-white p-6'}`}>
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Liquidation Waterfall</h3>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-gray-900">{formatMoneyFromCents(exitAmount)}</div>
-          <div className="text-sm text-gray-500">Exit Amount</div>
+      {!hideHeader && (
+        <div className="mb-6 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900">Liquidation Waterfall</h3>
+          <div className="text-right">
+            <div className="text-2xl font-bold text-gray-900">{formatMoneyFromCents(exitAmount)}</div>
+            <div className="text-sm text-gray-500">Exit Amount</div>
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="flex gap-8">
+      <div className={`flex gap-8 ${hideHeader ? 'h-full' : ''}`}>
         {/* Main Chart */}
-        <div className="flex-1">
-          <div className="relative">
+        <div className="flex-1 min-w-0">
+          <div className="relative h-full flex flex-col">
             {/* Waterfall Container */}
-            <div className="rounded-lg bg-gray-50 p-4">
+            <div className="rounded-lg bg-gray-50 p-4 flex-1 flex flex-col">
               {/* Amount at top */}
               <div className="mb-4 text-center">
                 <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2">
                   <span className="text-sm text-gray-600">Total</span>
                   <span className="text-lg font-semibold text-gray-900">{formatMoneyFromCents(exitAmount)}</span>
                 </div>
+                {useNonLinearScaling && (
+                  <p className="text-xs text-gray-500 mt-2">Scaled view for better visibility</p>
+                )}
               </div>
 
               {/* Waterfall Segments */}
-              <div className="space-y-0.5">
-                {segments.map((segment, index) => {
-                  const heightPercent = segment.percentage;
+              <div className="space-y-0.5 flex-1 flex flex-col">
+                {segments.map((segment) => {
+                  // Use visual percentage for rendering, actual percentage for logic
+                  const heightPercent = (segment as any).visualPercentage || segment.percentage;
+                  const actualPercent = segment.percentage;
                   const isHighlighted = highlightedPayoutId === segment.payout.id;
+                  
+                  // Dynamic minHeight based on compression state
+                  const minHeight = isCompressed 
+                    ? Math.max(10, Math.min(20, 200 / segments.length)) 
+                    : 25;
+                  
+                  // Adjust flex value for better proportions
+                  const flexValue = isCompressed 
+                    ? Math.max(heightPercent, 0.5) 
+                    : Math.max(heightPercent, 1);
+                  
+                  // Determine if segment is too small for labels (use actual percentage)
+                  const isSmallSegment = isCompressed && actualPercent < 2;
 
                   return (
                     <div
@@ -187,21 +227,41 @@ export default function WaterfallChartPro({
                         isHighlighted ? "ring-2 ring-blue-500 ring-offset-2" : ""
                       }`}
                       style={{
-                        height: `${Math.max(heightPercent * 3, 30)}px`, // Min height for readability
+                        flex: `${flexValue} 0 0`,
+                        minHeight: `${minHeight}px`,
                         backgroundColor: segment.color,
                       }}
                       onMouseEnter={() => onPayoutHover?.(segment.payout)}
                       onMouseLeave={() => onPayoutHover?.(null)}
                     >
-                      {/* Segment Content */}
-                      <div className="absolute inset-0 flex items-center px-4">
-                        <div className="flex flex-1 items-center justify-between">
-                          <span className="truncate pr-2 font-medium text-white">{segment.payout.investorName}</span>
-                          <span className="text-sm font-medium whitespace-nowrap text-white">
-                            {formatMoneyFromCents(segment.amount)}
-                          </span>
+                      {/* Segment Content - Hide on very small segments when compressed */}
+                      {!isSmallSegment ? (
+                        <div className="absolute inset-0 flex items-center px-4">
+                          <div className="flex flex-1 items-center justify-between">
+                            <span className="truncate pr-2 font-medium text-white">{segment.payout.investorName}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium whitespace-nowrap text-white">
+                                {formatMoneyFromCents(segment.amount)}
+                              </span>
+                              {/* Show actual percentage when using non-linear scaling */}
+                              {(segment as any).visualPercentage && Math.abs((segment as any).visualPercentage - actualPercent) > 1 && (
+                                <span className="text-xs text-white/70">
+                                  ({actualPercent.toFixed(1)}%)
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        // Show dots indicator for small segments
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="flex gap-0.5">
+                            <div className="w-1 h-1 rounded-full bg-white/60" />
+                            <div className="w-1 h-1 rounded-full bg-white/60" />
+                            <div className="w-1 h-1 rounded-full bg-white/60" />
+                          </div>
+                        </div>
+                      )}
 
                       {/* Hover Tooltip */}
                       <div className="pointer-events-none absolute top-1/2 left-full z-20 ml-4 -translate-y-1/2 rounded-lg bg-gray-900 px-3 py-2 text-sm whitespace-nowrap text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
@@ -244,9 +304,9 @@ export default function WaterfallChartPro({
         </div>
 
         {/* Legend */}
-        <div className="w-64">
+        <div className="w-64 flex-shrink-0">
           <h4 className="mb-3 text-sm font-semibold text-gray-700">Share Classes</h4>
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-96 overflow-y-auto">
             {shareClasses.map(({ name, color, amount, percentage }) => (
               <div key={name} className="flex items-center justify-between">
                 <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -264,22 +324,24 @@ export default function WaterfallChartPro({
       </div>
 
       {/* Summary Stats */}
-      <div className="mt-6 border-t border-gray-200 pt-6">
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className="text-2xl font-bold text-gray-900">{formatMoneyFromCents(totalPaid)}</div>
-            <div className="text-sm text-gray-500">Total Distributed</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-gray-900">{segments.length}</div>
-            <div className="text-sm text-gray-500">Recipients</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-gray-900">{((totalPaid / exitAmount) * 100).toFixed(0)}%</div>
-            <div className="text-sm text-gray-500">Distribution Rate</div>
+      {!hideHeader && (
+        <div className="mt-6 border-t border-gray-200 pt-6">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold text-gray-900">{formatMoneyFromCents(totalPaid)}</div>
+              <div className="text-sm text-gray-500">Total Distributed</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-gray-900">{segments.length}</div>
+              <div className="text-sm text-gray-500">Recipients</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-gray-900">{((totalPaid / exitAmount) * 100).toFixed(0)}%</div>
+              <div className="text-sm text-gray-500">Distribution Rate</div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

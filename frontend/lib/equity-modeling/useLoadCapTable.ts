@@ -40,10 +40,11 @@ export function useLoadCapTable() {
             participating: sc.participating || false,
             participationCapMultiple: sc.participationCapMultiple ? Number(sc.participationCapMultiple) : undefined,
             seniorityRank: sc.seniorityRank || 0,
-            dividendRate: sc.dividendRate ? Number(sc.dividendRate) : undefined,
-            compoundingDividends: sc.compoundingDividends || false,
-            cumulativeDividends: sc.cumulativeDividends || false,
-            antidilutionProtection: sc.antidilutionProtection || 'none',
+            // Additional properties not in DB yet
+            // dividendRate: undefined,
+            // compoundingDividends: false,
+            // cumulativeDividends: false,
+            // antidilutionProtection: 'none',
             isHypothetical: false,
             color: sc.preferred ? '#60A5FA' : '#94A3B8',
           })),
@@ -75,6 +76,8 @@ export function useLoadCapTable() {
         };
 
         const config = {
+          version: '1.0.0',
+          createdAt: new Date(),
           scenario: {
             name: 'Current Cap Table',
             description: 'Loaded from database',

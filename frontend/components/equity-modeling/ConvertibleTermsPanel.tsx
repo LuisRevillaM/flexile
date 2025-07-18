@@ -47,7 +47,7 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
       principalValueInCents: 100000000, // $1M default
       issuedAt: new Date(),
       impliedShares: 100000, // Will be recalculated
-      valuationCapCents: 1000000000, // $10M default
+      valuationCapCents: BigInt(1000000000), // $10M default
       discountRatePercent: 20,
       isHypothetical: true,
     });
@@ -113,7 +113,7 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
 
   return (
     <Card className={className}>
-      <div className="p-6">
+      <div className={className?.includes('p-0') ? '' : 'p-6'}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Convertible Securities</h3>
           <Button
@@ -215,9 +215,16 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
                           min="0"
                           step="100000"
                           value={security.valuationCapCents ? Number(security.valuationCapCents) / 100 : ''}
-                          onChange={(e) => updateConvertibleSecurity(security.id, { 
-                            valuationCapCents: e.target.value ? BigInt(Math.round((parseFloat(e.target.value) || 0) * 100)) : undefined
-                          })}
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              updateConvertibleSecurity(security.id, { 
+                                valuationCapCents: BigInt(Math.round((parseFloat(e.target.value) || 0) * 100))
+                              });
+                            } else {
+                              // @ts-ignore - TypeScript doesn't handle partial updates with undefined well
+                              updateConvertibleSecurity(security.id, { valuationCapCents: undefined });
+                            }
+                          }}
                           placeholder="No cap"
                           className="text-right"
                         />
@@ -246,9 +253,16 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
                           max="100"
                           step="5"
                           value={security.discountRatePercent || ''}
-                          onChange={(e) => updateConvertibleSecurity(security.id, { 
-                            discountRatePercent: e.target.value ? parseFloat(e.target.value) : undefined
-                          })}
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              updateConvertibleSecurity(security.id, { 
+                                discountRatePercent: parseFloat(e.target.value)
+                              });
+                            } else {
+                              // @ts-ignore - TypeScript doesn't handle partial updates with undefined well
+                              updateConvertibleSecurity(security.id, { discountRatePercent: undefined });
+                            }
+                          }}
                           placeholder="No discount"
                           className="text-right"
                         />
@@ -304,6 +318,7 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
                                   maturityDate: new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000), // 2 years
                                 });
                               } else {
+                                // @ts-ignore - TypeScript doesn't handle partial updates with undefined well
                                 updateConvertibleSecurity(security.id, { 
                                   interestRatePercent: undefined,
                                   maturityDate: undefined,
@@ -355,9 +370,16 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
                                   max="20"
                                   step="0.5"
                                   value={security.interestRatePercent || ''}
-                                  onChange={(e) => updateConvertibleSecurity(security.id, { 
-                                    interestRatePercent: e.target.value ? parseFloat(e.target.value) : undefined
-                                  })}
+                                  onChange={(e) => {
+                                    if (e.target.value) {
+                                      updateConvertibleSecurity(security.id, { 
+                                        interestRatePercent: parseFloat(e.target.value)
+                                      });
+                                    } else {
+                                      // @ts-ignore - TypeScript doesn't handle partial updates with undefined well
+                                      updateConvertibleSecurity(security.id, { interestRatePercent: undefined });
+                                    }
+                                  }}
                                   className="text-right"
                                 />
                                 <span className="text-sm text-gray-500">%</span>
@@ -371,9 +393,16 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
                               <Input
                                 type="date"
                                 value={security.maturityDate ? security.maturityDate.toISOString().split('T')[0] : ''}
-                                onChange={(e) => updateConvertibleSecurity(security.id, { 
-                                  maturityDate: e.target.value ? new Date(e.target.value) : undefined
-                                })}
+                                onChange={(e) => {
+                                  if (e.target.value) {
+                                    updateConvertibleSecurity(security.id, { 
+                                      maturityDate: new Date(e.target.value)
+                                    });
+                                  } else {
+                                    // @ts-ignore - TypeScript doesn't handle partial updates with undefined well
+                                    updateConvertibleSecurity(security.id, { maturityDate: undefined });
+                                  }
+                                }}
                               />
                             </div>
                           </>
