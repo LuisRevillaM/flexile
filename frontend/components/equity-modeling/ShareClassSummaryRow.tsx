@@ -34,11 +34,6 @@ export default function ShareClassSummaryRow({
           <span className="text-sm font-medium text-gray-900 truncate">
             {shareClass.name}
           </span>
-          {shareClass.isHypothetical && (
-            <span className="text-xs text-gray-400 flex-shrink-0">
-              (Draft)
-            </span>
-          )}
         </div>
 
         {/* Center section - Type and price */}

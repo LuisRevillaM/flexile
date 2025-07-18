@@ -144,6 +144,7 @@ export default function ShareClassTermsPanel({ className }: ShareClassTermsPanel
                     holding={holding}
                     onUpdate={(updates) => updateShareClass(shareClass.id, updates)}
                     onUpdateInvestmentSize={(updates) => updateInvestmentSize(shareClass.id, updates)}
+                    onRemove={shareClass.isHypothetical ? () => removeShareClass(shareClass.id) : undefined}
                   />
                 </div>
               )}

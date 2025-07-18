@@ -100,6 +100,7 @@ export default function ConvertibleTermsPanel({ className }: ConvertibleTermsPan
                   <ConvertibleTermsGrid
                     security={security}
                     onUpdate={(updates) => updateConvertibleSecurity(security.id, updates)}
+                    onRemove={security.isHypothetical ? () => removeConvertibleSecurity(security.id) : undefined}
                   />
                 </div>
               )}

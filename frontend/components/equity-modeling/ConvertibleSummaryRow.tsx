@@ -37,11 +37,6 @@ export default function ConvertibleSummaryRow({
           <span className="text-sm text-gray-500 truncate">
             {investorName}
           </span>
-          {security.isHypothetical && (
-            <span className="text-xs text-gray-400 flex-shrink-0">
-              (Draft)
-            </span>
-          )}
         </div>
 
         {/* Right section - Amount */}

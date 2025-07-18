@@ -1,4 +1,5 @@
 import React from 'react';
+import { X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { PlaygroundConvertibleSecurity } from '@/lib/equity-modeling/types';
@@ -6,16 +7,31 @@ import type { PlaygroundConvertibleSecurity } from '@/lib/equity-modeling/types'
 interface ConvertibleTermsGridProps {
   security: PlaygroundConvertibleSecurity;
   onUpdate: (updates: Partial<PlaygroundConvertibleSecurity>) => void;
+  onRemove?: () => void;
 }
 
 export default function ConvertibleTermsGrid({
   security,
   onUpdate,
+  onRemove,
 }: ConvertibleTermsGridProps) {
   const isNote = security.interestRatePercent !== undefined;
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-4">
+      {/* Delete button for hypothetical convertibles */}
+      {security.isHypothetical && onRemove && (
+        <div className="flex justify-end">
+          <button
+            onClick={onRemove}
+            className="p-1.5 hover:bg-red-50 rounded-md text-gray-400 hover:text-red-600 transition-colors"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      )}
+      
+      <div className="grid grid-cols-2 gap-4">
       {/* Principal Amount */}
       <div>
         <label className="block text-xs font-medium text-gray-600 mb-1.5">
@@ -140,6 +156,7 @@ export default function ConvertibleTermsGrid({
           />
         </div>
       )}
+      </div>
     </div>
   );
 }

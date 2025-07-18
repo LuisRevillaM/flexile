@@ -1,4 +1,5 @@
 import React from 'react';
+import { X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import InvestmentSizeControls from './InvestmentSizeControls';
@@ -9,6 +10,7 @@ interface ShareClassTermsGridProps {
   holding: PlaygroundShareHolding | undefined;
   onUpdate: (updates: Partial<PlaygroundShareClass>) => void;
   onUpdateInvestmentSize: (updates: { totalInvestmentCents?: number; numberOfShares?: number; pricePerShare?: number }) => void;
+  onRemove?: () => void;
 }
 
 export default function ShareClassTermsGrid({
@@ -16,21 +18,32 @@ export default function ShareClassTermsGrid({
   holding,
   onUpdate,
   onUpdateInvestmentSize,
+  onRemove,
 }: ShareClassTermsGridProps) {
   return (
     <div className="space-y-4">
-      {/* Name Input - Full width */}
+      {/* Name Input with Delete - Full width */}
       {shareClass.isHypothetical && (
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1.5">
             Name
           </label>
-          <Input
-            value={shareClass.name}
-            onChange={(e) => onUpdate({ name: e.target.value })}
-            className="h-9 text-sm w-full"
-            placeholder="Share class name"
-          />
+          <div className="flex items-center gap-2">
+            <Input
+              value={shareClass.name}
+              onChange={(e) => onUpdate({ name: e.target.value })}
+              className="h-9 text-sm flex-1"
+              placeholder="Share class name"
+            />
+            {onRemove && (
+              <button
+                onClick={onRemove}
+                className="p-1.5 hover:bg-red-50 rounded-md text-gray-400 hover:text-red-600 transition-colors"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </div>
         </div>
       )}
       
