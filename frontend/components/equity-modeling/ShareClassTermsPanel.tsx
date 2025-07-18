@@ -1,22 +1,28 @@
-import React from 'react';
-import { Plus, HelpCircle, X } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import React, { useState } from 'react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePlayground } from '@/lib/equity-modeling/store';
+import ShareClassSummaryRow from './ShareClassSummaryRow';
+import ShareClassTermsGrid from './ShareClassTermsGrid';
 
 interface ShareClassTermsPanelProps {
   className?: string;
 }
 
 export default function ShareClassTermsPanel({ className }: ShareClassTermsPanelProps) {
-  const { shareClasses, updateShareClass, addShareClass, removeShareClass } = usePlayground();
+  const { 
+    shareClasses, 
+    shareHoldings, 
+    updateShareClass, 
+    updateShareHolding, 
+    addShareClass, 
+    removeShareClass 
+  } = usePlayground();
+  
+  const [expandedShareClasses, setExpandedShareClasses] = useState<Set<string>>(new Set());
 
   const handleAddShareClass = () => {
-    addShareClass({
+    const newId = addShareClass({
       name: `Series ${String.fromCharCode(65 + shareClasses.filter(sc => sc.isHypothetical).length)}`,
       preferred: true,
       originalIssuePriceInDollars: 10.0,
@@ -25,212 +31,134 @@ export default function ShareClassTermsPanel({ className }: ShareClassTermsPanel
       seniorityRank: Math.max(...shareClasses.map(sc => sc.seniorityRank), -1) + 1,
       isHypothetical: true,
     });
+    
+    // Auto-expand the new share class
+    setExpandedShareClasses(new Set([...expandedShareClasses, newId]));
   };
 
+  // Helper function to get hypothetical holdings for a share class
+  const getHypotheticalHolding = (shareClassId: string) => {
+    return shareHoldings.find(h => h.shareClassId === shareClassId && h.isHypothetical);
+  };
+
+  // Helper function to update investment size
+  const updateInvestmentSize = (shareClassId: string, updates: { totalInvestmentCents?: number; numberOfShares?: number; pricePerShare?: number }) => {
+    const holding = getHypotheticalHolding(shareClassId);
+    if (!holding) return;
+
+    let newShares = holding.numberOfShares;
+    let newPrice = holding.sharePriceUsd;
+    let newTotalCents = holding.totalAmountInCents;
+
+    // Smart recalculation based on what was updated
+    if (updates.totalInvestmentCents !== undefined && updates.pricePerShare !== undefined) {
+      // Total investment and price changed - calculate shares
+      newTotalCents = updates.totalInvestmentCents;
+      newPrice = updates.pricePerShare;
+      newShares = Math.round(newTotalCents / 100 / newPrice);
+    } else if (updates.numberOfShares !== undefined && updates.pricePerShare !== undefined) {
+      // Shares and price changed - calculate total investment
+      newShares = updates.numberOfShares;
+      newPrice = updates.pricePerShare;
+      newTotalCents = Math.round(newShares * newPrice * 100);
+    } else if (updates.totalInvestmentCents !== undefined && updates.numberOfShares !== undefined) {
+      // Total investment and shares changed - calculate price
+      newTotalCents = updates.totalInvestmentCents;
+      newShares = updates.numberOfShares;
+      newPrice = newShares > 0 ? newTotalCents / 100 / newShares : 0;
+    } else if (updates.totalInvestmentCents !== undefined) {
+      // Only total investment changed - keep price, calculate shares
+      newTotalCents = updates.totalInvestmentCents;
+      newShares = Math.round(newTotalCents / 100 / newPrice);
+    } else if (updates.numberOfShares !== undefined) {
+      // Only shares changed - keep price, calculate total investment
+      newShares = updates.numberOfShares;
+      newTotalCents = Math.round(newShares * newPrice * 100);
+    } else if (updates.pricePerShare !== undefined) {
+      // Only price changed - keep shares, calculate total investment
+      newPrice = updates.pricePerShare;
+      newTotalCents = Math.round(newShares * newPrice * 100);
+    }
+
+    // Update both share class and holdings
+    updateShareClass(shareClassId, { originalIssuePriceInDollars: newPrice });
+    updateShareHolding(holding.id, {
+      numberOfShares: newShares,
+      sharePriceUsd: newPrice,
+      totalAmountInCents: newTotalCents,
+    });
+  };
+
+  const toggleExpanded = (shareClassId: string) => {
+    const newExpanded = new Set(expandedShareClasses);
+    if (newExpanded.has(shareClassId)) {
+      newExpanded.delete(shareClassId);
+    } else {
+      newExpanded.add(shareClassId);
+    }
+    setExpandedShareClasses(newExpanded);
+  };
 
   // Sort share classes by seniority rank (lower number = higher priority)
   const sortedShareClasses = [...shareClasses].sort((a, b) => a.seniorityRank - b.seniorityRank);
 
   return (
     <div className={className}>
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-medium">Share Classes</h3>
+        <h3 className="text-base font-medium text-gray-900">Share Classes</h3>
         <Button
           size="small"
           variant="ghost"
           onClick={handleAddShareClass}
           className="text-gray-600 hover:text-gray-900"
         >
-          <Plus className="size-3.5 mr-1" />
+          <Plus className="size-3.5 mr-1.5" />
           Add
         </Button>
       </div>
 
-        <div className="space-y-4">
-          {sortedShareClasses.map((shareClass, index) => (
-            <div
-              key={shareClass.id}
-              className={`p-4 rounded-lg ${
-                shareClass.isHypothetical ? 'bg-gray-50' : 'bg-gray-50/50'
-              }`}
-            >
-              <div className="space-y-3">
-                {/* Header Row */}
-                <div className="flex items-center gap-2 mb-3">
-                  <Input
-                    value={shareClass.name}
-                    onChange={(e) => updateShareClass(shareClass.id, { name: e.target.value })}
-                    className="flex-1 font-medium border-0 bg-white"
-                    placeholder="Share class name"
+      {/* Share Classes List */}
+      <div className="space-y-1">
+        {sortedShareClasses.map((shareClass, index) => {
+          const isExpanded = expandedShareClasses.has(shareClass.id);
+          const holding = getHypotheticalHolding(shareClass.id);
+
+          return (
+            <div key={shareClass.id} className="border border-gray-200 rounded-lg overflow-hidden">
+              {/* Summary Row */}
+              <ShareClassSummaryRow
+                shareClass={shareClass}
+                holding={holding}
+                index={index}
+                isExpanded={isExpanded}
+                onClick={() => toggleExpanded(shareClass.id)}
+              />
+
+              {/* Expanded Details */}
+              {isExpanded && (
+                <div className="bg-gray-50 border-t border-gray-200 px-4 py-3">
+                  {/* Terms Grid - No header needed, less is more */}
+                  <ShareClassTermsGrid
+                    shareClass={shareClass}
+                    holding={holding}
+                    onUpdate={(updates) => updateShareClass(shareClass.id, updates)}
+                    onUpdateInvestmentSize={(updates) => updateInvestmentSize(shareClass.id, updates)}
                   />
-
-                  <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                    shareClass.isHypothetical ? 'bg-gray-200 text-gray-600' : 'bg-gray-700 text-white'
-                  }`}>
-                    {shareClass.isHypothetical ? 'HYPO' : 'DB'}
-                  </span>
-
-                  {shareClass.isHypothetical && (
-                    <button
-                      onClick={() => removeShareClass(shareClass.id)}
-                      className="p-1 hover:bg-red-100 rounded text-red-600"
-                    >
-                      <X className="size-4" />
-                    </button>
-                  )}
                 </div>
-
-                {/* Terms Grid */}
-                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                  <div>
-                    <label className="flex items-center gap-1 text-xs font-medium text-gray-500 mb-1">
-                      Liquidation Preference
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <HelpCircle className="size-3 text-gray-400" />
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
-                            <p className="font-semibold mb-1">Liquidation Preference</p>
-                            <p className="text-sm">The multiple of invested capital returned before common shareholders.</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      value={shareClass.liquidationPreferenceMultiple}
-                      onChange={(e) => updateShareClass(shareClass.id, { 
-                        liquidationPreferenceMultiple: parseFloat(e.target.value) || 0 
-                      })}
-                      className="text-sm"
-                      placeholder="1.0"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="flex items-center gap-1 text-xs font-medium text-gray-500 mb-1">
-                      Participation
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <HelpCircle className="size-3 text-gray-400" />
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
-                            <p className="font-semibold mb-1">Participation Rights</p>
-                            <p className="text-sm">After liquidation preference, does this class participate in remaining proceeds?</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </label>
-                    <Select
-                      value={shareClass.participating ? (shareClass.participationCapMultiple ? 'capped' : 'full') : 'none'}
-                      onValueChange={(value) => {
-                        if (value === 'none') {
-                          updateShareClass(shareClass.id, { participating: false });
-                          // @ts-ignore - TypeScript doesn't handle partial updates with undefined well
-                          updateShareClass(shareClass.id, { participationCapMultiple: undefined });
-                        } else if (value === 'capped') {
-                          updateShareClass(shareClass.id, { 
-                            participating: true,
-                            participationCapMultiple: 3.0 
-                          });
-                        } else {
-                          updateShareClass(shareClass.id, { participating: true });
-                          // @ts-ignore - TypeScript doesn't handle partial updates with undefined well  
-                          updateShareClass(shareClass.id, { participationCapMultiple: undefined });
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="text-sm w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Non-participating</SelectItem>
-                        <SelectItem value="capped">Capped participation</SelectItem>
-                        <SelectItem value="full">Full participation</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {shareClass.participating && shareClass.participationCapMultiple !== undefined && (
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">
-                        Participation Cap
-                      </label>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.5"
-                        value={shareClass.participationCapMultiple}
-                        onChange={(e) => updateShareClass(shareClass.id, { 
-                          participationCapMultiple: parseFloat(e.target.value) || 0 
-                        })}
-                        className="text-sm"
-                        placeholder="3.0"
-                      />
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="text-xs font-medium text-gray-500 mb-1 block">
-                      Type
-                    </label>
-                    <Select
-                      value={shareClass.preferred ? 'preferred' : 'common'}
-                      onValueChange={(value) => updateShareClass(shareClass.id, { 
-                        preferred: value === 'preferred' 
-                      })}
-                    >
-                      <SelectTrigger className="text-sm w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="common">Common</SelectItem>
-                        <SelectItem value="preferred">Preferred</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-medium text-gray-500 mb-1 block">
-                      Issue Price
-                    </label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={shareClass.originalIssuePriceInDollars}
-                      onChange={(e) => updateShareClass(shareClass.id, { 
-                        originalIssuePriceInDollars: parseFloat(e.target.value) || 0 
-                      })}
-                      className="text-sm"
-                      placeholder="$0.00"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-medium text-gray-500 mb-1 block">
-                      Seniority Rank
-                    </label>
-                    <div className="text-sm font-semibold text-gray-700 bg-gray-100 rounded px-3 py-1.5 text-center">
-                      #{index + 1}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
-          ))}
+          );
+        })}
 
-          {shareClasses.length === 0 && (
-            <div className="text-center py-12 text-gray-400">
-              <p className="text-sm">No share classes configured</p>
-              <p className="text-xs mt-1">Click "Add" to create a share class</p>
-            </div>
-          )}
-        </div>
+        {/* Empty State */}
+        {shareClasses.length === 0 && (
+          <div className="text-center py-12 text-gray-400">
+            <p className="text-sm">No share classes configured</p>
+            <p className="text-xs mt-1">Click "Add" to create a share class</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

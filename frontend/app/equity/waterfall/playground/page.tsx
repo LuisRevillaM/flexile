@@ -262,7 +262,9 @@ export default function WaterfallPlaygroundPage() {
                                         isExpanded ? 'rotate-90' : ''
                                       }`} 
                                     />
-                                    <span className="font-medium text-gray-900">{investor.name}</span>
+                                    <span className="font-medium text-gray-900">
+                                      {investor.name}
+                                    </span>
                                     <span className="text-sm text-gray-500">
                                       ({investor.payouts.length} {investor.payouts.length === 1 ? 'holding' : 'holdings'})
                                     </span>

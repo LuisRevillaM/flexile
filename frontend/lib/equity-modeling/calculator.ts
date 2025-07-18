@@ -303,11 +303,15 @@ export class EquityWaterfallCalculator {
     payouts.forEach((payout, key) => {
       const [investorId, shareClassId] = key.split('-');
       const shareClass = this.equityStructure.shareClasses.find(sc => sc.id === shareClassId);
+      const investor = this.equityStructure.investors.find(i => i.id === investorId);
       
       if (!shareClass) return;
 
       const total = payout.preference + payout.participation + payout.common;
       if (total <= 0) return;
+
+      // Check if this payout involves hypothetical data
+      const isHypothetical = shareClass.isHypothetical || investor?.isHypothetical;
 
       result.push({
         id: `payout-${key}`,
@@ -321,6 +325,7 @@ export class EquityWaterfallCalculator {
         liquidationPreferenceAmount: Math.round(payout.preference),
         participationAmount: Math.round(payout.participation),
         commonProceedsAmount: Math.round(payout.common),
+        isHypothetical,
       });
     });
 

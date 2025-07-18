@@ -174,20 +174,81 @@ export const usePlayground = create<PlaygroundStore>()(
         id,
       };
       
-      set((state) => ({
-        shareClasses: [...state.shareClasses, shareClass],
-        hasUnsavedChanges: true,
-      }));
+      set((state) => {
+        const newState = {
+          shareClasses: [...state.shareClasses, shareClass],
+          hasUnsavedChanges: true,
+          shareHoldings: [...state.shareHoldings],
+          investors: [...state.investors],
+        };
+
+        // If this is a hypothetical share class, create a dedicated hypothetical investor
+        if (shareClass.isHypothetical) {
+          // Create hypothetical investor with clear naming
+          const investorId = get().generateId();
+          const hypotheticalInvestor: PlaygroundInvestor = {
+            id: investorId,
+            name: `Hypothetical ${shareClass.name} investor`,
+            type: 'entity',
+            isHypothetical: true,
+            createdAt: new Date(),
+          };
+          
+          newState.investors.push(hypotheticalInvestor);
+          
+          // Create holdings for the hypothetical investor
+          const defaultShares = shareClass.preferred ? 1000000 : 5000000; // 1M for preferred, 5M for common
+          const holdingId = get().generateId();
+          const holding: PlaygroundShareHolding = {
+            id: holdingId,
+            investorId: investorId,
+            shareClassId: id,
+            numberOfShares: defaultShares,
+            sharePriceUsd: shareClass.originalIssuePriceInDollars,
+            totalAmountInCents: Math.round(defaultShares * shareClass.originalIssuePriceInDollars * 100),
+            issuedAt: new Date(),
+            isHypothetical: true,
+          };
+          
+          newState.shareHoldings.push(holding);
+        }
+
+        return newState;
+      });
       
       return id;
     },
 
-    updateShareClass: (id, updates) => set((state) => ({
-      shareClasses: state.shareClasses.map(shareClass => 
+    updateShareClass: (id, updates) => set((state) => {
+      const updatedShareClasses = state.shareClasses.map(shareClass => 
         shareClass.id === id ? { ...shareClass, ...updates } : shareClass
-      ),
-      hasUnsavedChanges: true,
-    })),
+      );
+      
+      // If the name is being updated for a hypothetical share class, update the associated investor name
+      const updatedInvestors = [...state.investors];
+      if (updates.name) {
+        const shareClass = state.shareClasses.find(sc => sc.id === id);
+        if (shareClass?.isHypothetical) {
+          // Find the hypothetical investor that was created for this share class
+          const associatedHolding = state.shareHoldings.find(h => h.shareClassId === id && h.isHypothetical);
+          if (associatedHolding) {
+            const investorIndex = updatedInvestors.findIndex(inv => inv.id === associatedHolding.investorId);
+            if (investorIndex !== -1 && updatedInvestors[investorIndex].isHypothetical) {
+              updatedInvestors[investorIndex] = {
+                ...updatedInvestors[investorIndex],
+                name: `Hypothetical ${updates.name} investor`
+              };
+            }
+          }
+        }
+      }
+      
+      return {
+        shareClasses: updatedShareClasses,
+        investors: updatedInvestors,
+        hasUnsavedChanges: true,
+      };
+    }),
 
     removeShareClass: (id) => set((state) => ({
       shareClasses: state.shareClasses.filter(sc => sc.id !== id),
@@ -449,13 +510,25 @@ usePlayground.subscribe(
     equalityFn: (a, b) => {
       // Safe comparison that handles BigInt
       const exitAmountEqual = a.exitAmount.toString() === b.exitAmount.toString();
+      
+      // Deep comparison for convertible securities to detect property changes
+      const convertiblesEqual = a.convertibleSecurities.length === b.convertibleSecurities.length &&
+        a.convertibleSecurities.every((sec, idx) => {
+          const other = b.convertibleSecurities[idx];
+          return sec.id === other.id &&
+            sec.principalValueInCents === other.principalValueInCents &&
+            sec.valuationCapCents?.toString() === other.valuationCapCents?.toString() &&
+            sec.discountRatePercent === other.discountRatePercent &&
+            sec.interestRatePercent === other.interestRatePercent;
+        });
+      
       // Simple reference equality for other arrays
       return (
         exitAmountEqual &&
         a.investors === b.investors &&
         a.shareClasses === b.shareClasses &&
         a.shareHoldings === b.shareHoldings &&
-        a.convertibleSecurities === b.convertibleSecurities
+        convertiblesEqual
       );
     }
   }

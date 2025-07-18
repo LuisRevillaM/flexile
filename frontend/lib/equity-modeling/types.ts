@@ -72,6 +72,7 @@ export interface PlaygroundPayout {
   liquidationPreferenceAmount: number;
   participationAmount: number;
   commonProceedsAmount: number;
+  isHypothetical?: boolean;
 }
 
 export interface PlaygroundScenario {

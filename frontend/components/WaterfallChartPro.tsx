@@ -225,6 +225,8 @@ export default function WaterfallChartPro({
                       key={segment.payout.id}
                       className={`group relative overflow-hidden rounded transition-all duration-200 ${
                         isHighlighted ? "ring-2 ring-blue-500 ring-offset-2" : ""
+                      } ${
+                        segment.payout.isHypothetical ? "border-2 border-dashed border-white/50" : ""
                       }`}
                       style={{
                         flex: `${flexValue} 0 0`,
@@ -238,7 +240,9 @@ export default function WaterfallChartPro({
                       {!isSmallSegment ? (
                         <div className="absolute inset-0 flex items-center px-4">
                           <div className="flex flex-1 items-center justify-between">
-                            <span className="truncate pr-2 font-medium text-white">{segment.payout.investorName}</span>
+                            <span className="truncate pr-2 font-medium text-white">
+                              {segment.payout.investorName}
+                            </span>
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium whitespace-nowrap text-white">
                                 {formatMoneyFromCents(segment.amount)}
