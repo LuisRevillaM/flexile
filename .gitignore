@@ -44,3 +44,6 @@ CLAUDE.md
 # Task workflow directories
 .worktrees/
 .task-contexts/
+
+# Claude prompt files (temporary)
+.claude-prompt-task-*.md
