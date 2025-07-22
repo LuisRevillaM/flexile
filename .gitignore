@@ -30,3 +30,12 @@ tmp
 # IDE
 .vscode
 .idea
+
+/task-registry-ui
+
+/experimental-scripts
+
+/scripts/mark-task-complete.sh
+/scripts/reserve-task.sh
+/scripts/show-active-work.sh
+/scripts/update-task-status.sh
