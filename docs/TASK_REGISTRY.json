@@ -1,0 +1,82 @@
+{
+  "lastUpdated": "2025-07-22T00:00:00Z",
+  "project": {
+    "name": "flexile",
+    "prefix": "TASK",
+    "template": "basic"
+  },
+  "tasks": {
+    "TASK_0.1": {
+      "status": "AVAILABLE",
+      "title": "Set up API base architecture",
+      "description": "Create foundational structure for external REST API",
+      "dependencies": [],
+      "completedAt": null,
+      "agentType": "local"
+    },
+    "TASK_0.2": {
+      "status": "BLOCKED",
+      "title": "Implement API token authentication",
+      "description": "Add ApiToken model and authentication filter for API controllers",
+      "dependencies": ["TASK_0.1"],
+      "completedAt": null,
+      "agentType": "local"
+    },
+    "TASK_0.3": {
+      "status": "BLOCKED",
+      "title": "Add API error handling and serializers",
+      "description": "Standardize JSON responses and error format",
+      "dependencies": ["TASK_0.1"],
+      "completedAt": null,
+      "agentType": "local"
+    },
+    "TASK_1.1": {
+      "status": "BLOCKED",
+      "title": "CRUD endpoints for invoices",
+      "description": "Expose invoice management via REST API",
+      "dependencies": ["TASK_0.2"],
+      "completedAt": null,
+      "agentType": "local"
+    },
+    "TASK_1.2": {
+      "status": "BLOCKED",
+      "title": "CRUD endpoints for people",
+      "description": "Manage company workers and investors through API",
+      "dependencies": ["TASK_0.2"],
+      "completedAt": null,
+      "agentType": "local"
+    },
+    "TASK_1.3": {
+      "status": "BLOCKED",
+      "title": "CRUD endpoints for documents",
+      "description": "Create, list and update documents via the API",
+      "dependencies": ["TASK_0.2"],
+      "completedAt": null,
+      "agentType": "local"
+    },
+    "TASK_1.4": {
+      "status": "BLOCKED",
+      "title": "CRUD endpoints for dividends",
+      "description": "Expose dividend records via API",
+      "dependencies": ["TASK_0.2"],
+      "completedAt": null,
+      "agentType": "local"
+    },
+    "TASK_1.5": {
+      "status": "BLOCKED",
+      "title": "CRUD endpoints for stock buybacks",
+      "description": "API for tender offers and buyback rounds",
+      "dependencies": ["TASK_0.2"],
+      "completedAt": null,
+      "agentType": "local"
+    },
+    "TASK_2.1": {
+      "status": "BLOCKED",
+      "title": "API integration tests",
+      "description": "Add RSpec request specs covering new API endpoints",
+      "dependencies": ["TASK_1.1", "TASK_1.2", "TASK_1.3", "TASK_1.4", "TASK_1.5"],
+      "completedAt": null,
+      "agentType": "local"
+    }
+  }
+}
