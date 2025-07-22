@@ -39,3 +39,8 @@ tmp
 /scripts/reserve-task.sh
 /scripts/show-active-work.sh
 /scripts/update-task-status.sh
+
+CLAUDE.md
+# Task workflow directories
+.worktrees/
+.task-contexts/
