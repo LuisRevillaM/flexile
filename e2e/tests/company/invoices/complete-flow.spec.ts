@@ -75,6 +75,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
     await page.getByPlaceholder("Description").first().fill("first item updated");
     const timeField = page.getByLabel("Hours / Qty").first();
+    await expect(timeField).toHaveValue("01:23");
     await timeField.fill("04:30");
     await timeField.blur(); // work around a test-specific issue; this works fine in a real browser
     await page.waitForTimeout(1000); // TODO (dani) avoid this
@@ -205,10 +206,12 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(approvedInvoiceRow.getByRole("cell", { name: "Payment scheduled" })).toBeVisible();
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).toBeVisible();
 
-    await rejectedInvoiceRow.click({ button: "right" });
-    await page.getByRole("menuitem", { name: "Edit" }).click();
-    await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
-    await page.getByLabel("Hours / Qty").fill("02:30");
+  await rejectedInvoiceRow.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Edit" }).click();
+  await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
+  const rejectedTimeField = page.getByLabel("Hours / Qty");
+  await expect(rejectedTimeField).toHaveValue("00:23");
+  await rejectedTimeField.fill("02:30");
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
     await page.waitForTimeout(200); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Re-submit invoice" }).click();
