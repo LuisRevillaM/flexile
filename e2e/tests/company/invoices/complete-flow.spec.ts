@@ -41,14 +41,23 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await fillDatePicker(page, "Date", "11/01/2024");
     await page.getByPlaceholder("Description").fill("first item");
-    await page.waitForTimeout(500); // TODO (dani) avoid this
+    await expect(page.getByLabel("Hours / Qty").first()).toBeVisible();
+    const firstCalcResponse = page.waitForResponse(
+      (res) => res.url().includes("trpc/equityCalculations.calculate") && res.status() === 200,
+    );
     await page.getByLabel("Hours / Qty").first().fill("01:23");
-    await page.waitForTimeout(500); // TODO (dani) avoid this
+    await page.getByLabel("Hours / Qty").first().blur();
+    await firstCalcResponse;
     await page.getByRole("button", { name: "Add line item" }).click();
     await page.getByPlaceholder("Description").nth(1).fill("second item");
-    await page.getByLabel("Hours / Qty").nth(1).fill("10");
+    const secondQuantity = page.getByLabel("Hours / Qty").nth(1);
+    const secondCalcResponse = page.waitForResponse(
+      (res) => res.url().includes("trpc/equityCalculations.calculate") && res.status() === 200,
+    );
+    await secondQuantity.fill("10");
+    await secondQuantity.blur();
+    await secondCalcResponse;
     await page.getByPlaceholder("Enter notes about your").fill("A note in the invoice");
-    await page.waitForTimeout(200); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
@@ -60,9 +69,12 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByPlaceholder("Description").fill("woops too little time");
     await page.getByLabel("Hours / Qty").fill("0:23");
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");
-    await page.waitForTimeout(300); // TODO (dani) avoid this
+    await expect(page.getByLabel("Invoice ID")).toHaveValue("CUSTOM-2");
+    const secondInvoiceCalc = page.waitForResponse(
+      (res) => res.url().includes("trpc/equityCalculations.calculate") && res.status() === 200,
+    );
     await fillDatePicker(page, "Date", "12/01/2024");
-    await page.waitForTimeout(300); // TODO (dani) avoid this
+    await secondInvoiceCalc;
     await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
@@ -76,8 +88,11 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByPlaceholder("Description").first().fill("first item updated");
     const timeField = page.getByLabel("Hours / Qty").first();
     await timeField.fill("04:30");
+    const editCalcResponse = page.waitForResponse(
+      (res) => res.url().includes("trpc/equityCalculations.calculate") && res.status() === 200,
+    );
     await timeField.blur(); // work around a test-specific issue; this works fine in a real browser
-    await page.waitForTimeout(1000); // TODO (dani) avoid this
+    await editCalcResponse;
     await page.getByRole("button", { name: "Re-submit invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
@@ -88,9 +103,12 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByPlaceholder("Description").fill("Invoice to be deleted");
     await page.getByLabel("Hours / Qty").fill("0:33");
     await page.getByLabel("Invoice ID").fill("CUSTOM-3");
-    await page.waitForTimeout(300); // TODO (dani) avoid this
+    await expect(page.getByLabel("Invoice ID")).toHaveValue("CUSTOM-3");
+    const thirdInvoiceCalc = page.waitForResponse(
+      (res) => res.url().includes("trpc/equityCalculations.calculate") && res.status() === 200,
+    );
     await fillDatePicker(page, "Date", "12/01/2024");
-    await page.waitForTimeout(300); // TODO (dani) avoid this
+    await thirdInvoiceCalc;
     await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.getByRole("cell", { name: "CUSTOM-3" })).toBeVisible();
@@ -110,8 +128,11 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("line item");
     await page.getByLabel("Hours / Qty").fill("10:23");
+    const workerBInvoiceCalc = page.waitForResponse(
+      (res) => res.url().includes("trpc/equityCalculations.calculate") && res.status() === 200,
+    );
     await fillDatePicker(page, "Date", "11/20/2024");
-    await page.waitForTimeout(200); // TODO (dani) avoid this
+    await workerBInvoiceCalc;
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByText("Awaiting approval")).toBeVisible();
 
@@ -208,9 +229,12 @@ test.describe("Invoice submission, approval and rejection", () => {
     await rejectedInvoiceRow.click({ button: "right" });
     await page.getByRole("menuitem", { name: "Edit" }).click();
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
+    const resubmitCalc = page.waitForResponse(
+      (res) => res.url().includes("trpc/equityCalculations.calculate") && res.status() === 200,
+    );
     await page.getByLabel("Hours / Qty").fill("02:30");
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
-    await page.waitForTimeout(200); // TODO (dani) avoid this
+    await resubmitCalc;
     await page.getByRole("button", { name: "Re-submit invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
