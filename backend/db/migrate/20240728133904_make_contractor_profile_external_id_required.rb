@@ -1,3 +1,7 @@
+class ContractorProfile < ApplicationRecord
+  self.table_name = 'contractor_profiles'
+end
+
 class MakeContractorProfileExternalIdRequired < ActiveRecord::Migration[7.1]
   def change
     up_only do
