@@ -1,4 +1,9 @@
 class AddUsedForInvoicesAndDividends < ActiveRecord::Migration[7.0]
+  class ContractorWiseRecipient < ApplicationRecord
+    self.table_name = 'wise_recipients'
+    scope :alive, -> { where(deleted_at: nil) }
+  end
+
   def up
     change_table :wise_recipients do |t|
       t.boolean :used_for_invoices, default: false, null: false
