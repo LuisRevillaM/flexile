@@ -183,10 +183,14 @@ test.describe("Tax settings", () => {
         .then(takeOrThrow);
       expect(updatedUser.userComplianceInfos).toHaveLength(2);
 
-      expect(updatedUser.userComplianceInfos[0]?.deletedAt).not.toBeNull();
+      const infos = updatedUser.userComplianceInfos.sort((a, b) =>
+        Number(a.id - b.id),
+      );
 
-      expect(updatedUser.userComplianceInfos[1]?.taxInformationConfirmedAt).not.toBeNull();
-      expect(updatedUser.userComplianceInfos[1]?.deletedAt).toBeNull();
+      expect(infos[0]?.deletedAt).not.toBeNull();
+
+      expect(infos[1]?.taxInformationConfirmedAt).not.toBeNull();
+      expect(infos[1]?.deletedAt).toBeNull();
     });
 
     // TODO (techdebt): Add the quickbooks tests from spec/system/settings/tax_spec.rb
