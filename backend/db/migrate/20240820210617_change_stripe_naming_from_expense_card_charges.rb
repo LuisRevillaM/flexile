@@ -1,3 +1,7 @@
+class ExpenseCardCharge < ApplicationRecord
+  self.table_name = 'expense_card_charges'
+end
+
 class ChangeStripeNamingFromExpenseCardCharges < ActiveRecord::Migration[7.1]
   def change
     add_column :expense_card_charges, :processor_transaction_reference, :string

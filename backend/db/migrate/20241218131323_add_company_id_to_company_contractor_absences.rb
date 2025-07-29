@@ -1,3 +1,8 @@
+class CompanyWorkerAbsence < ApplicationRecord
+  self.table_name = 'company_contractor_absences'
+  belongs_to :company_worker, class_name: 'CompanyWorker'
+end
+
 class AddCompanyIdToCompanyContractorAbsences < ActiveRecord::Migration[7.2]
   def change
     add_reference :company_contractor_absences, :company, index: true

@@ -1,4 +1,9 @@
 class AddCompanyIdToCompanyContractorUpdates < ActiveRecord::Migration[7.2]
+  class CompanyWorkerUpdate < ApplicationRecord
+    self.table_name = 'company_contractor_updates'
+    belongs_to :company_worker, class_name: 'CompanyWorker'
+  end
+
   def change
     add_reference :company_contractor_updates, :company, index: true
 

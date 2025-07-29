@@ -1,4 +1,14 @@
 class MergeCompanyWorkerUpdateTasks < ActiveRecord::Migration[7.2]
+  class CompanyWorkerUpdateTask < ApplicationRecord
+    self.table_name = 'company_contractor_update_tasks'
+    belongs_to :task
+  end
+
+  class Task < ApplicationRecord
+    self.table_name = 'tasks'
+    has_many :integration_records, as: :integratable, class_name: 'IntegrationRecord'
+  end
+
   def change
     change_table :company_contractor_update_tasks do |t|
       t.text :name
