@@ -1,3 +1,7 @@
+class ExpenseCard < ApplicationRecord
+  self.table_name = 'expense_cards'
+end
+
 class AddExpenseCardProcessorColumns < ActiveRecord::Migration[7.1]
   def change
     create_enum :expense_cards_processors, %w[stripe]
