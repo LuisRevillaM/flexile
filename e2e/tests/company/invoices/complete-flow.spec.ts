@@ -198,6 +198,8 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await clerk.signOut({ page });
     await login(page, workerUserA);
+    await page.getByRole("link", { name: "Invoices" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     const approvedInvoiceRow = page.locator("tbody tr").filter({ hasText: "CUSTOM-1" });
     const rejectedInvoiceRow = page.locator("tbody tr").filter({ hasText: "CUSTOM-2" });
