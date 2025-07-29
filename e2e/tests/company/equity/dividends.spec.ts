@@ -72,10 +72,10 @@ test.describe("Dividends", () => {
         await modal.getByRole("button", { name: "Add your signature" }).click();
         await expect(modal.getByText(assertDefined(investorUser.legalName))).toHaveCount(2);
         await modal.getByRole("button", { name: "Accept funds" }).click();
-        await page.getByRole("dialog").waitFor({ state: "hidden" });
       },
       { page },
     );
+    await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.getByRole("button", { name: "Sign" })).not.toBeVisible();
 
     const updatedDividend = await db.query.dividends
