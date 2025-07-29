@@ -1,3 +1,10 @@
+class Contract < ApplicationRecord
+  self.table_name = 'contracts'
+  CONSULTING_CONTRACT_NAME = Document::CONSULTING_CONTRACT_NAME
+  belongs_to :company_contractor, class_name: 'CompanyWorker', optional: true
+  belongs_to :company_administrator
+end
+
 class AddNameToContract < ActiveRecord::Migration[7.1]
   def up
     add_column :contracts, :name, :string
